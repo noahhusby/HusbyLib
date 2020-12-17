@@ -1,0 +1,3 @@
+rootProject.name = 'HusbyLib'
+
+include 'data'

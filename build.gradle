@@ -1,0 +1,38 @@
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '4.0.4'
+}
+
+group 'com.noahhusby'
+version '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+allprojects {
+    apply plugin: "java"
+
+    ext {
+        husbylibVersion = "0.0.1-ALPHA";
+    }
+
+    group "com.noahhusby"
+    version "$husbylibVersion"
+
+    tasks.withType(JavaCompile) {
+        options.encoding = "UTF-8"
+    }
+
+    repositories {
+        mavenCentral()
+    }
+}
+
+dependencies {
+    for (Project prj : project.allprojects) {
+        if (!"HusbyLib".equalsIgnoreCase(prj.name) && prj.parent.name.equalsIgnoreCase("HusbyLib")) {
+            compile project(":" + prj.name)
+        }
+    }
+}
