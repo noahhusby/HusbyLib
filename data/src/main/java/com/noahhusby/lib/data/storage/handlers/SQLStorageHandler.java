@@ -10,6 +10,7 @@ import com.noahhusby.lib.data.sql.MySQL;
 import com.noahhusby.lib.data.sql.actions.*;
 import com.noahhusby.lib.data.sql.structure.Structure;
 import com.noahhusby.lib.data.sql.structure.StructureElement;
+import com.noahhusby.lib.data.sql.structure.Type;
 import com.noahhusby.lib.data.storage.Storage;
 import com.noahhusby.lib.data.storage.compare.ComparatorAction;
 import com.noahhusby.lib.data.storage.compare.CompareResult;
@@ -85,7 +86,11 @@ public class SQLStorageHandler implements StorageHandler {
                         if(object.get(key).isJsonObject() || object.get(key).isJsonArray()) {
                             objects.add(gson.toJson(object.get(key)));
                         } else {
-                            objects.add(object.get(key).getAsString());
+                            if(object.get(key).isJsonNull()) {
+                                objects.add(null);
+                            } else {
+                                objects.add(object.get(key).getAsString());
+                            }
                         }
                     }
 
@@ -103,7 +108,11 @@ public class SQLStorageHandler implements StorageHandler {
                             if(object.get(key).isJsonObject() || object.get(key).isJsonArray()) {
                                 update = new UpdateValue(key, gson.toJson(object.get(key)));
                             } else {
-                                update = new UpdateValue(key, object.get(key).getAsString());
+                                if(object.get(key).isJsonNull()) {
+                                    update = new UpdateValue(key, null);
+                                } else {
+                                    update = new UpdateValue(key, object.get(key).getAsString());
+                                }
                             }
                             continue;
                         }
@@ -114,8 +123,10 @@ public class SQLStorageHandler implements StorageHandler {
                         }
                     }
 
+                    String obj = object.get(result.getKey()).isJsonNull() ? null : object.get(result.getKey()).getAsString();
+
                     database.execute(new Update(table, update, String.format("%s='%s'", result.getKey(),
-                            object.get(result.getKey()).getAsString())));
+                            obj)));
                 }
             }
 
@@ -174,7 +185,6 @@ public class SQLStorageHandler implements StorageHandler {
                     } else {
                         ResultSetMetaData metaData = getDatabase().getConnection().createStatement().executeQuery(String.format("SELECT * FROM %s", table)).getMetaData();
                         List<String> columnNames = new ArrayList<>();
-                        System.out.println(metaData.getColumnCount());
                         for(int i = 1; i <= metaData.getColumnCount(); i++) {
                             columnNames.add(metaData.getColumnName(i));
                         }

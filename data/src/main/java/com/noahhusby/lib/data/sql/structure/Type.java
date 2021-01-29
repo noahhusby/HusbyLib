@@ -8,6 +8,8 @@ import lombok.Getter;
 public enum Type {
     INT("INT"),
 
+    BIGINT("BIGINT(255)"),
+
     TEXT("TEXT(255)");
 
     @Getter private final String query;
