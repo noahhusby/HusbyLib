@@ -148,7 +148,7 @@ public class SQLStorageHandler implements StorageHandler {
 
     @Override
     public boolean isAvailable() {
-        return getDatabase().isConnected();
+        return getDatabase().isConnected() && repaired;
     }
 
     private void onLoop() {
