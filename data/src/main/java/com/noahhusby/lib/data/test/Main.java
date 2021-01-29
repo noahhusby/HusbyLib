@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.noahhusby.lib.data.sql.Credentials;
 import com.noahhusby.lib.data.sql.ISQLDatabase;
 import com.noahhusby.lib.data.sql.MySQL;
+import com.noahhusby.lib.data.sql.structure.Structure;
+import com.noahhusby.lib.data.sql.structure.Type;
 import com.noahhusby.lib.data.storage.StorageHashMap;
 import com.noahhusby.lib.data.storage.StorageList;
 import com.noahhusby.lib.data.storage.compare.ValueComparator;
@@ -12,6 +14,7 @@ import com.noahhusby.lib.data.storage.handlers.SQLStorageHandler;
 
 import javax.swing.*;
 import java.io.File;
+import java.sql.Types;
 import java.util.Map;
 
 public class Main {
@@ -24,7 +27,6 @@ public class Main {
 
     public void onEnable() {
 
-
         //Local File
         //LocalStorageHandler localStorageHandler = new LocalStorageHandler(new File("test1.json"));
         //localStorageHandler.setPriority(-1);
@@ -32,7 +34,14 @@ public class Main {
 
         // SQL Database
         ISQLDatabase database = new MySQL(new Credentials("127.0.0.1", 3306, "root", "", "sledgehammer"));
-        list.registerHandler(new SQLStorageHandler(database, "somestorableobject", "whatsShakenBacon,magic,work", "TEXT(255),INT,JSON"));
+        list.registerHandler(new SQLStorageHandler(database, "test",
+                Structure.builder()
+                        .add("whatsShakenBacon", Type.TEXT)
+                        .add("magic", Type.INT)
+                        .add("work", Type.TEXT)
+                        .repair(true)
+                .build()
+        ));
 
         list.setComparator(new ValueComparator("whatsShakenBacon"));
         showMenu();

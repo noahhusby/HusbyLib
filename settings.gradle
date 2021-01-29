@@ -1,3 +1,4 @@
 rootProject.name = 'HusbyLib'
 
 include 'data'
+include 'minecraft'

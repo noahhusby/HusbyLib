@@ -3,6 +3,7 @@ package com.noahhusby.lib.data.sql;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.mysql.cj.jdbc.MysqlDataSource;
+import com.mysql.cj.protocol.a.result.TextBufferRow;
 import com.noahhusby.lib.data.JsonUtils;
 import com.noahhusby.lib.data.sql.actions.*;
 
@@ -130,6 +131,10 @@ public class MySQL extends SQLDatabase {
                 }
                 result.addRow(row);
             }
+
+            res.close();
+            stmt.close();
+            System.gc();
 
             return result;
 

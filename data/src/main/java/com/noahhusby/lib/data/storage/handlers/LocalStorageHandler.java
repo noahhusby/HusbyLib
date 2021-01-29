@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.noahhusby.lib.data.storage.Storage;
 import com.noahhusby.lib.data.storage.compare.CompareResult;
-import org.json.simple.JSONArray;
 
 import java.io.File;
 import java.io.FileReader;

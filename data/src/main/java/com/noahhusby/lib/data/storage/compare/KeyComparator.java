@@ -5,11 +5,15 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.noahhusby.lib.data.storage.handlers.StorageHandler;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
 public class KeyComparator implements Comparator {
-    protected JsonArray lastUpdate;
+    protected JsonArray lastSave = new JsonArray();
+    protected JsonArray lastLoad = new JsonArray();
+
     protected final String key;
 
     public KeyComparator(String key) {
@@ -22,14 +26,11 @@ public class KeyComparator implements Comparator {
     }
 
     protected CompareResult save(JsonArray array, boolean save) {
-        if(lastUpdate == null) lastUpdate = new JsonArray();
         Map<JsonObject, ComparatorAction> compared = new HashMap<>();
-        JsonArray add = new JsonArray();
-        JsonArray remove = new JsonArray();
 
         for(JsonElement je : array) {
             boolean a = true;
-            for(JsonElement ls : lastUpdate) {
+            for(JsonElement ls : lastLoad) {
                 if(ls.getAsJsonObject().get(key) == null || je.getAsJsonObject().get(key) == null) continue;
                 if(ls.getAsJsonObject().get(key).equals(je.getAsJsonObject().get(key))) {
                     a = false;
@@ -37,13 +38,23 @@ public class KeyComparator implements Comparator {
                 }
             }
 
+            if(a) {
+                for(JsonElement ls : lastSave) {
+                    if(ls.getAsJsonObject().get(key) == null || je.getAsJsonObject().get(key) == null) continue;
+                    if(ls.getAsJsonObject().get(key).equals(je.getAsJsonObject().get(key))) {
+                        a = false;
+                        break;
+                    }
+                }
+            }
+
             if(a)
-                add.add(je.getAsJsonObject());
+                compared.put(je.getAsJsonObject(), ComparatorAction.ADD);
         }
 
-        for(JsonElement je : array) {
+        for(JsonElement ls : lastSave) {
             boolean r = true;
-            for(JsonElement ls : lastUpdate) {
+            for(JsonElement je : array) {
                 if(ls.getAsJsonObject().get(key) == null || je.getAsJsonObject().get(key) == null) continue;
                 if(ls.getAsJsonObject().get(key).equals(je.getAsJsonObject().get(key))) {
                     r = false;
@@ -52,17 +63,19 @@ public class KeyComparator implements Comparator {
             }
 
             if(r)
-                remove.add(je.getAsJsonObject());
+                compared.put(ls.getAsJsonObject(), ComparatorAction.REMOVE);
         }
 
-        for(JsonElement re : remove)
-            compared.put(re.getAsJsonObject(), ComparatorAction.REMOVE);
+        if(save)  {
+            try {
+                Method m = JsonArray.class.getDeclaredMethod("deepCopy");
+                m.setAccessible(true);
+                lastSave = (JsonArray) m.invoke(array);
+            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+            }
+        }
 
-        for(JsonElement ae : add)
-            compared.put(ae.getAsJsonObject(), ComparatorAction.ADD);
-
-        if(save)
-            lastUpdate = array.deepCopy();
         return new CompareResult(array, compared, key, false);
     }
 
@@ -73,14 +86,11 @@ public class KeyComparator implements Comparator {
 
     protected CompareResult load(StorageHandler handler, boolean save) {
         JsonArray array = handler.load();
-        if(lastUpdate == null) lastUpdate = new JsonArray();
         Map<JsonObject, ComparatorAction> compared = new HashMap<>();
-        JsonArray add = new JsonArray();
-        JsonArray remove = new JsonArray();
 
         for(JsonElement je : array) {
             boolean a = true;
-            for(JsonElement ls : lastUpdate) {
+            for(JsonElement ls : lastLoad) {
                 if(ls.getAsJsonObject().get(key) == null || je.getAsJsonObject().get(key) == null) continue;
                 if(ls.getAsJsonObject().get(key).equals(je.getAsJsonObject().get(key))) {
                     a = false;
@@ -88,13 +98,23 @@ public class KeyComparator implements Comparator {
                 }
             }
 
+            if(a) {
+                for(JsonElement ls : lastSave) {
+                    if(ls.getAsJsonObject().get(key) == null || je.getAsJsonObject().get(key) == null) continue;
+                    if(ls.getAsJsonObject().get(key).equals(je.getAsJsonObject().get(key))) {
+                        a = false;
+                        break;
+                    }
+                }
+            }
+
             if(a)
-                add.add(je.getAsJsonObject());
+                compared.put(je.getAsJsonObject(), ComparatorAction.ADD);
         }
 
-        for(JsonElement je : array) {
+        for(JsonElement ls : lastLoad) {
             boolean r = true;
-            for(JsonElement ls : lastUpdate) {
+            for(JsonElement je : array) {
                 if(ls.getAsJsonObject().get(key) == null || je.getAsJsonObject().get(key) == null) continue;
                 if(ls.getAsJsonObject().get(key).equals(je.getAsJsonObject().get(key))) {
                     r = false;
@@ -103,17 +123,19 @@ public class KeyComparator implements Comparator {
             }
 
             if(r)
-                remove.add(je.getAsJsonObject());
+                compared.put(ls.getAsJsonObject(), ComparatorAction.REMOVE);
         }
 
-        for(JsonElement re : remove)
-            compared.put(re.getAsJsonObject(), ComparatorAction.REMOVE);
+        if(save)  {
+            try {
+                Method m = JsonArray.class.getDeclaredMethod("deepCopy");
+                m.setAccessible(true);
+                lastLoad = (JsonArray) m.invoke(array);
+            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+            }
+        }
 
-        for(JsonElement ae : add)
-            compared.put(ae.getAsJsonObject(), ComparatorAction.ADD);
-
-        if(save)
-            lastUpdate = array.deepCopy();
         return new CompareResult(array, compared, key, false);
     }
 }

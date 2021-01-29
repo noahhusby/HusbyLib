@@ -1,6 +1,7 @@
 package com.noahhusby.lib.data.storage;
 
 import com.google.gson.*;
+import com.noahhusby.lib.data.JsonUtils;
 import com.noahhusby.lib.data.storage.compare.Comparator;
 import com.noahhusby.lib.data.storage.compare.ComparatorAction;
 import com.noahhusby.lib.data.storage.compare.CompareResult;
@@ -89,7 +90,7 @@ public class StorageList<E> extends ArrayList<E> implements Storage {
                     JsonObject updateObject = null;
                     int val = -1;
                     for(int i = 0; i < this.size(); i++) {
-                        JsonObject temp = JsonParser.parseString(new Gson().toJson(get(i))).getAsJsonObject();
+                        JsonObject temp = JsonUtils.parseString(new Gson().toJson(get(i))).getAsJsonObject();
                         if(temp.get(result.getKey()).equals(object.get(result.getKey()))) {
                             updateObject = temp;
                             val = i;
@@ -97,13 +98,17 @@ public class StorageList<E> extends ArrayList<E> implements Storage {
                         }
                     }
 
-                    for(String updateKey : object.keySet()) {
-                        updateObject.remove(updateKey);
-                        updateObject.add(updateKey, object.get(updateKey));
-                    }
+                    if(updateObject != null) {
+                        for(String updateKey : JsonUtils.keySet(object)) {
 
-                    remove(val);
-                    add(new Gson().fromJson(updateObject, (Type) E));
+                            updateObject.remove(updateKey);
+                            updateObject.add(updateKey, object.get(updateKey));
+                        }
+
+                        remove(val);
+                        add(new Gson().fromJson(updateObject, (Type) E));
+
+                    }
                 }
             }
         } catch (Exception e) {
@@ -125,7 +130,7 @@ public class StorageList<E> extends ArrayList<E> implements Storage {
     public void save() {
         JsonArray array = new JsonArray();
         for(E o : this) {
-            array.add(JsonParser.parseString(gson.toJson(o)));
+            array.add(JsonUtils.parseString(gson.toJson(o)));
         }
 
         CompareResult result = comparator.save(array);

@@ -1,6 +1,7 @@
 package com.noahhusby.lib.data.storage;
 
 import com.google.gson.*;
+import com.noahhusby.lib.data.JsonUtils;
 import com.noahhusby.lib.data.storage.compare.Comparator;
 import com.noahhusby.lib.data.storage.compare.ComparatorAction;
 import com.noahhusby.lib.data.storage.compare.CompareResult;
@@ -87,7 +88,7 @@ public class StorageHashMap<K, V> extends HashMap<K, V> implements Storage {
                     JsonObject updateObject = null;
                     int val = -1;
                     for(int i = 0; i < this.size(); i++) {
-                        JsonObject temp = JsonParser.parseString(new Gson().toJson(get(i))).getAsJsonObject();
+                        JsonObject temp = JsonUtils.parseString(new Gson().toJson(get(i))).getAsJsonObject();
                         if(temp.get(result.getKey()).equals(object.get(result.getKey()))) {
                             updateObject = temp;
                             val = i;
@@ -95,7 +96,7 @@ public class StorageHashMap<K, V> extends HashMap<K, V> implements Storage {
                         }
                     }
 
-                    for(String updateKey : object.keySet()) {
+                    for(String updateKey : JsonUtils.keySet(object)) {
                         updateObject.remove(updateKey);
                         updateObject.add(updateKey, object.get(updateKey));
                     }
@@ -123,7 +124,7 @@ public class StorageHashMap<K, V> extends HashMap<K, V> implements Storage {
         for(StorageHandler s : storageHandlers) {
             JsonArray array = new JsonArray();
             for(Entry<K, V> es : this.entrySet()) {
-                JsonObject jo = JsonParser.parseString(gson.toJson(es.getValue())).getAsJsonObject();
+                JsonObject jo = JsonUtils.parseString(gson.toJson(es.getValue())).getAsJsonObject();
                 jo.addProperty("K", es.getKey().toString());
                 array.add(jo);
             }
