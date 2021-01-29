@@ -63,6 +63,7 @@ public class SQLStorageHandler implements StorageHandler {
 
     @Override
     public void save(CompareResult result) {
+        if(!isAvailable()) return;
         try {
             if(result.isCleared())
                 database.execute(new Custom(String.format("DELETE FROM %s;", table)));
@@ -125,6 +126,7 @@ public class SQLStorageHandler implements StorageHandler {
 
     @Override
     public JsonArray load() {
+        if(!isAvailable()) return new JsonArray();
         Result result = database.select(new Select(table, "*", ""));
         JsonArray array = new JsonArray();
 
@@ -146,7 +148,7 @@ public class SQLStorageHandler implements StorageHandler {
 
     @Override
     public boolean isAvailable() {
-        return true;
+        return getDatabase().isConnected();
     }
 
     private void onLoop() {
