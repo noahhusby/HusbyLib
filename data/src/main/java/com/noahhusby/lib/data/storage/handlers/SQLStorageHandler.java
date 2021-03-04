@@ -7,10 +7,15 @@ import com.google.gson.JsonObject;
 import com.noahhusby.lib.data.JsonUtils;
 import com.noahhusby.lib.data.sql.ISQLDatabase;
 import com.noahhusby.lib.data.sql.MySQL;
-import com.noahhusby.lib.data.sql.actions.*;
+import com.noahhusby.lib.data.sql.actions.Custom;
+import com.noahhusby.lib.data.sql.actions.Insert;
+import com.noahhusby.lib.data.sql.actions.Result;
+import com.noahhusby.lib.data.sql.actions.Row;
+import com.noahhusby.lib.data.sql.actions.Select;
+import com.noahhusby.lib.data.sql.actions.Update;
+import com.noahhusby.lib.data.sql.actions.UpdateValue;
 import com.noahhusby.lib.data.sql.structure.Structure;
 import com.noahhusby.lib.data.sql.structure.StructureElement;
-import com.noahhusby.lib.data.sql.structure.Type;
 import com.noahhusby.lib.data.storage.Storage;
 import com.noahhusby.lib.data.storage.compare.ComparatorAction;
 import com.noahhusby.lib.data.storage.compare.CompareResult;
@@ -64,29 +69,34 @@ public class SQLStorageHandler implements StorageHandler {
 
     @Override
     public void save(CompareResult result) {
-        if(!isAvailable()) return;
+        if (!isAvailable()) {
+            return;
+        }
         try {
-            if(result.isCleared())
+            if (result.isCleared()) {
                 database.execute(new Custom(String.format("DELETE FROM %s;", table)));
+            }
 
-            for(Map.Entry<JsonObject, ComparatorAction> r : result.getComparedOutput().entrySet()) {
+            for (Map.Entry<JsonObject, ComparatorAction> r : result.getComparedOutput().entrySet()) {
                 JsonObject object = r.getKey();
-                if(r.getValue() == ComparatorAction.REMOVE) {
+                if (r.getValue() == ComparatorAction.REMOVE) {
                     database.execute(new Custom(
                             String.format("DELETE FROM %s WHERE %s='%s';", table, result.getKey(), object.get(result.getKey()).getAsString())));
                 }
 
-                if(r.getValue() == ComparatorAction.ADD) {
+                if (r.getValue() == ComparatorAction.ADD) {
                     List<String> keys = new ArrayList<>();
                     List<String> objects = new ArrayList<>();
-                    for(Object k : JsonUtils.keySet(object)) {
+                    for (Object k : JsonUtils.keySet(object)) {
                         String key = (String) k;
-                        if(!structure.getColumnNames().contains(key)) continue;
+                        if (!structure.getColumnNames().contains(key)) {
+                            continue;
+                        }
                         keys.add(key);
-                        if(object.get(key).isJsonObject() || object.get(key).isJsonArray()) {
+                        if (object.get(key).isJsonObject() || object.get(key).isJsonArray()) {
                             objects.add(gson.toJson(object.get(key)));
                         } else {
-                            if(object.get(key).isJsonNull()) {
+                            if (object.get(key).isJsonNull()) {
                                 objects.add(null);
                             } else {
                                 objects.add(object.get(key).getAsString());
@@ -100,15 +110,17 @@ public class SQLStorageHandler implements StorageHandler {
                     database.execute(new Insert(table, String.join(",", keys), finalObjects));
                 }
 
-                if(r.getValue() == ComparatorAction.UPDATE) {
+                if (r.getValue() == ComparatorAction.UPDATE) {
                     UpdateValue update = null;
-                    for(String key : JsonUtils.keySet(object)) {
-                        if(key.equals(result.getKey())) continue;
-                        if(update == null) {
-                            if(object.get(key).isJsonObject() || object.get(key).isJsonArray()) {
+                    for (String key : JsonUtils.keySet(object)) {
+                        if (key.equals(result.getKey())) {
+                            continue;
+                        }
+                        if (update == null) {
+                            if (object.get(key).isJsonObject() || object.get(key).isJsonArray()) {
                                 update = new UpdateValue(key, gson.toJson(object.get(key)));
                             } else {
-                                if(object.get(key).isJsonNull()) {
+                                if (object.get(key).isJsonNull()) {
                                     update = new UpdateValue(key, null);
                                 } else {
                                     update = new UpdateValue(key, object.get(key).getAsString());
@@ -116,7 +128,7 @@ public class SQLStorageHandler implements StorageHandler {
                             }
                             continue;
                         }
-                        if(object.get(key).isJsonObject() || object.get(key).isJsonArray()) {
+                        if (object.get(key).isJsonObject() || object.get(key).isJsonArray()) {
                             update.add(key, gson.toJson(object.get(key)));
                         } else {
                             update.add(key, object.get(key).getAsString());
@@ -137,12 +149,15 @@ public class SQLStorageHandler implements StorageHandler {
 
     @Override
     public JsonArray load() {
-        if(!isAvailable()) return new JsonArray();
+        if (!isAvailable()) {
+            return new JsonArray();
+        }
         Result result = database.select(new Select(table, "*", ""));
         JsonArray array = new JsonArray();
 
-        for(Row r : result.getRows())
+        for (Row r : result.getRows()) {
             array.add(gson.fromJson(gson.toJson(r.getColumns()), JsonObject.class));
+        }
 
         return array;
     }
@@ -163,21 +178,21 @@ public class SQLStorageHandler implements StorageHandler {
     }
 
     private void onLoop() {
-        if(!getDatabase().isConnected()) {
+        if (!getDatabase().isConnected()) {
             getDatabase().connect();
             return;
         }
 
-        if(!repaired) {
+        if (!repaired) {
             try {
-                if(structure.isRepair()) {
+                if (structure.isRepair()) {
                     DatabaseMetaData dbm = getDatabase().getConnection().getMetaData();
                     database.execute(new Custom("SET SQL_SAFE_UPDATES = 0;"));
 
                     ResultSet tables = dbm.getTables(getDatabase().getCredentials().getDatabase(), null, table, null);
-                    if(!tables.next()) {
+                    if (!tables.next()) {
                         StringBuilder query = new StringBuilder(structure.getElements().get(0).getColumn() + " " + structure.getElements().get(0).getType().getQuery());
-                        for(int i = 1; i < structure.getElements().size(); i++) {
+                        for (int i = 1; i < structure.getElements().size(); i++) {
                             StructureElement s = structure.getElements().get(i);
                             query.append(", ").append(s.getColumn()).append(" ").append(s.getType().getQuery());
                         }
@@ -185,18 +200,18 @@ public class SQLStorageHandler implements StorageHandler {
                     } else {
                         ResultSetMetaData metaData = getDatabase().getConnection().createStatement().executeQuery(String.format("SELECT * FROM %s", table)).getMetaData();
                         List<String> columnNames = new ArrayList<>();
-                        for(int i = 1; i <= metaData.getColumnCount(); i++) {
+                        for (int i = 1; i <= metaData.getColumnCount(); i++) {
                             columnNames.add(metaData.getColumnName(i));
                         }
                         List<String> structureColumnNames = new ArrayList<>();
-                        for(StructureElement se : structure.getElements()) {
+                        for (StructureElement se : structure.getElements()) {
                             structureColumnNames.add(se.getColumn());
-                            if(!columnNames.contains(se.getColumn())) {
+                            if (!columnNames.contains(se.getColumn())) {
                                 database.execute(new Custom(String.format("ALTER TABLE %s ADD COLUMN %s %s;", table, se.getColumn(), se.getType().getQuery())));
                             }
                         }
-                        for(String c : columnNames) {
-                            if(!structureColumnNames.contains(c)) {
+                        for (String c : columnNames) {
+                            if (!structureColumnNames.contains(c)) {
                                 database.execute(new Custom(String.format("ALTER TABLE %s DROP COLUMN %s;", table, c)));
                             }
                         }

@@ -12,7 +12,8 @@ public enum Type {
 
     TEXT("TEXT(255)");
 
-    @Getter private final String query;
+    @Getter
+    private final String query;
 
     Type(String query) {
         this.query = query;

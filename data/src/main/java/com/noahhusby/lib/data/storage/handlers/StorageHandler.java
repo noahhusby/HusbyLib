@@ -9,10 +9,12 @@ public interface StorageHandler {
     void init(Storage storage);
 
     void save(CompareResult result);
+
     JsonArray load();
 
 
     int getPriority();
+
     void setPriority(int priority);
 
     boolean isAvailable();

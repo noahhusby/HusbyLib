@@ -5,7 +5,8 @@ public class Select implements Query {
     private String columns = "";
     private String filter = "";
 
-    public Select() {}
+    public Select() {
+    }
 
     public Select(String table, String columns, String filter) {
         this.table = table;
@@ -34,7 +35,7 @@ public class Select implements Query {
     }
 
     public String getColumns() {
-        if(columns == null) {
+        if (columns == null) {
             return "*";
         } else {
             return columns;
@@ -44,10 +45,12 @@ public class Select implements Query {
 
     @Override
     public String query() {
-        if(columns == null || columns.equals("")) columns = "*";
+        if (columns == null || columns.equals("")) {
+            columns = "*";
+        }
 
         String sql = String.format("SELECT %s FROM %s", columns, table);
-        if(filter != null && !filter.equals("")) {
+        if (filter != null && !filter.equals("")) {
             sql += " WHERE " + filter;
         }
 

@@ -3,18 +3,26 @@ package com.noahhusby.lib.data.sql;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.mysql.cj.jdbc.MysqlDataSource;
-import com.mysql.cj.protocol.a.result.TextBufferRow;
 import com.noahhusby.lib.data.JsonUtils;
-import com.noahhusby.lib.data.sql.actions.*;
+import com.noahhusby.lib.data.sql.actions.Query;
+import com.noahhusby.lib.data.sql.actions.Result;
+import com.noahhusby.lib.data.sql.actions.Row;
+import com.noahhusby.lib.data.sql.actions.Select;
 
 import java.io.IOException;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.concurrent.CompletableFuture;
 
 public class MySQL extends SQLDatabase {
 
     private Gson gson = new Gson();
 
-    public MySQL() {}
+    public MySQL() {
+    }
 
     public MySQL(Credentials credentials) {
         super(credentials);
@@ -49,10 +57,14 @@ public class MySQL extends SQLDatabase {
 
     @Override
     public boolean isConnected() {
-        if(connection == null) return false;
+        if (connection == null) {
+            return false;
+        }
 
         try {
-            if(data.getConnection().isClosed()) return false;
+            if (data.getConnection().isClosed()) {
+                return false;
+            }
         } catch (SQLException e) {
             return false;
         }
@@ -81,7 +93,7 @@ public class MySQL extends SQLDatabase {
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            if(stmt != null) {
+            if (stmt != null) {
                 try {
                     stmt.close();
                     return true;
@@ -104,22 +116,23 @@ public class MySQL extends SQLDatabase {
             ResultSetMetaData resmeta = res.getMetaData();
             Result result = new Result();
 
-            while(res.next()) {
+            while (res.next()) {
                 Row row = new Row();
                 int i = 1;
                 boolean bound = true;
                 while (bound) {
                     try {
                         boolean addedJson = false;
-                        if(res.getObject(i) instanceof String) {
-                            if(JsonUtils.isJsonValid(res.getString(i))) {
+                        if (res.getObject(i) instanceof String) {
+                            if (JsonUtils.isJsonValid(res.getString(i))) {
                                 addedJson = true;
                                 row.addColumn(resmeta.getColumnName(i), gson.fromJson(res.getString(i), JsonElement.class));
                             }
                         }
 
-                        if(!addedJson)
+                        if (!addedJson) {
                             row.addColumn(resmeta.getColumnName(i), res.getObject(i));
+                        }
 
                     } catch (SQLException e) {
                         bound = false;
@@ -142,5 +155,12 @@ public class MySQL extends SQLDatabase {
             e.printStackTrace();
             return new Result();
         }
+    }
+
+    @Override
+    public CompletableFuture<Result> asyncSelect(Select select) {
+        CompletableFuture<Result> future = new CompletableFuture<>();
+        new Thread(() -> future.complete(this.select(select)));
+        return future;
     }
 }

@@ -10,7 +10,10 @@ import java.util.List;
  */
 @AllArgsConstructor
 public class StructureElement {
-    @Getter private final String column;
-    @Getter private final List<String> keys;
-    @Getter private final Type type;
+    @Getter
+    private final String column;
+    @Getter
+    private final List<String> keys;
+    @Getter
+    private final Type type;
 }

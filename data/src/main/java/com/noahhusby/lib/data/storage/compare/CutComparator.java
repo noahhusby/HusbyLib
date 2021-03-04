@@ -12,8 +12,9 @@ public class CutComparator implements Comparator {
     @Override
     public CompareResult save(JsonArray array) {
         Map<JsonObject, ComparatorAction> compared = new HashMap<>();
-        for(JsonElement je : array)
+        for (JsonElement je : array) {
             compared.put(je.getAsJsonObject(), ComparatorAction.ADD);
+        }
 
         return new CompareResult(array, compared, null, true);
     }
@@ -22,8 +23,9 @@ public class CutComparator implements Comparator {
     public CompareResult load(StorageHandler handler) {
         JsonArray array = handler.load();
         Map<JsonObject, ComparatorAction> compared = new HashMap<>();
-        for(JsonElement je : array)
+        for (JsonElement je : array) {
             compared.put(je.getAsJsonObject(), ComparatorAction.ADD);
+        }
 
         return new CompareResult(array, compared, null, true);
     }

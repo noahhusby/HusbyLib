@@ -18,7 +18,7 @@ public class LocalStorageHandler implements StorageHandler {
 
     public LocalStorageHandler(File file) {
         this.file = file;
-        if(!file.exists()) {
+        if (!file.exists()) {
             try {
                 file.createNewFile();
                 FileWriter writer = new FileWriter(file);

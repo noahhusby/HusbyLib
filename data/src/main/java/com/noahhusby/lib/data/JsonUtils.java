@@ -1,6 +1,10 @@
 package com.noahhusby.lib.data;
 
-import com.google.gson.*;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonIOException;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.internal.Streams;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
@@ -10,7 +14,6 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -51,7 +54,7 @@ public class JsonUtils {
      * Returns the next value from the JSON stream as a parse tree.
      *
      * @throws JsonParseException if there is an IOException or if the specified
-     *     text is not valid JSON
+     *                            text is not valid JSON
      */
     public static JsonElement parseReader(JsonReader reader)
             throws JsonIOException, JsonSyntaxException {
@@ -68,8 +71,9 @@ public class JsonUtils {
 
     public static Set<String> keySet(JsonObject object) {
         Set<String> result = new HashSet<>();
-        for(Map.Entry<String, JsonElement> es : object.entrySet())
+        for (Map.Entry<String, JsonElement> es : object.entrySet()) {
             result.add(es.getKey());
+        }
         return result;
     }
 
@@ -89,8 +93,8 @@ public class JsonUtils {
         try {
             JsonToken token;
             loop:
-            while ( (token = jsonReader.peek()) != JsonToken.END_DOCUMENT && token != null ) {
-                switch ( token ) {
+            while ((token = jsonReader.peek()) != JsonToken.END_DOCUMENT && token != null) {
+                switch (token) {
                     case BEGIN_ARRAY:
                         jsonReader.beginArray();
                         break;
@@ -119,7 +123,7 @@ public class JsonUtils {
                 }
             }
             return true;
-        } catch ( final MalformedJsonException ignored ) {
+        } catch (final MalformedJsonException ignored) {
             return false;
         }
     }

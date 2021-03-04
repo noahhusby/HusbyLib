@@ -7,7 +7,8 @@ public class Insert implements Query {
     private String columns = "";
     private String[] data = null;
 
-    public Insert() {}
+    public Insert() {
+    }
 
     public Insert(String table, String columns, String... data) {
         this.table = table;
@@ -49,7 +50,7 @@ public class Insert implements Query {
         StringBuilder sqlData = new StringBuilder();
         for (int i = 0; i < data.length; i++) {
             sqlData.append("'").append(data[i]).append("'");
-            if(i != data.length - 1) {
+            if (i != data.length - 1) {
                 sqlData.append(", ");
             }
         }

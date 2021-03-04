@@ -5,7 +5,8 @@ public class Update implements Query {
     private UpdateValue value = null;
     private String filter = "";
 
-    public Update() {}
+    public Update() {
+    }
 
     public Update(String table, UpdateValue value, String filter) {
         this.table = table;
@@ -41,9 +42,11 @@ public class Update implements Query {
     public String query() {
         StringBuilder change = new StringBuilder();
         int i = 1;
-        for(String key : value.getKeys()) {
+        for (String key : value.getKeys()) {
             change.append(key).append(" = '").append(value.get(key)).append("'");
-            if(i != value.getKeys().size()) change.append(", ");
+            if (i != value.getKeys().size()) {
+                change.append(", ");
+            }
             i++;
         }
 

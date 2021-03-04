@@ -7,9 +7,10 @@ public class Credentials {
     private String password = "";
     private String database = "";
 
-    public Credentials() {}
+    public Credentials() {
+    }
 
-    public Credentials(String host, int port, String user, String password, String database)  {
+    public Credentials(String host, int port, String user, String password, String database) {
         this.host = host;
         this.port = port;
         this.user = user;

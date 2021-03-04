@@ -1,42 +1,52 @@
 package com.noahhusby.lib.data.storage;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.noahhusby.lib.data.JsonUtils;
 import com.noahhusby.lib.data.storage.compare.Comparator;
 import com.noahhusby.lib.data.storage.compare.ComparatorAction;
 import com.noahhusby.lib.data.storage.compare.CompareResult;
 import com.noahhusby.lib.data.storage.compare.CutComparator;
+import com.noahhusby.lib.data.storage.compare.ValueComparator;
 import com.noahhusby.lib.data.storage.handlers.StorageHandler;
+import lombok.Getter;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import static com.noahhusby.lib.data.storage.StorageUtil.*;
+
 public class StorageList<E> extends ArrayList<E> implements Storage {
 
-    private Comparator comparator = new CutComparator();
-    private Gson gson;
+    @Getter
+    private final String key;
+
+    private final Map<StorageHandler, Comparator> storageHandlers = new HashMap<>();
+
     private Object E;
 
     public StorageList(Class<E> clazz) {
         this.E = clazz;
-        gson = new GsonBuilder()
-                .excludeFieldsWithoutExposeAnnotation()
-                .serializeNulls()
-                .create();
+        key = StorageUtil.getKeyAnnotation(clazz);
     }
 
-    private final List<StorageHandler> storageHandlers = new ArrayList<>();
+    private final List<Runnable> saveEvents = new ArrayList<>();
+    private final List<Runnable> loadEvents = new ArrayList<>();
+
     private ScheduledExecutorService autoSave = null;
     private ScheduledExecutorService autoLoad = null;
 
     @Override
     public void registerHandler(StorageHandler handler) {
-        storageHandlers.add(handler);
+        storageHandlers.put(handler, key == null ? new CutComparator() : new ValueComparator(key));
     }
 
     @Override
@@ -50,56 +60,58 @@ public class StorageList<E> extends ArrayList<E> implements Storage {
     }
 
     @Override
-    public void setComparator(Comparator comparator) {
-        this.comparator = comparator;
-    }
-
-    @Override
-    public Comparator getComparator() {
-        return comparator;
-    }
-
-    @Override
     public void load() {
         try {
-            if(storageHandlers.isEmpty()) return;
-            StorageHandler handler = storageHandlers.get(0);
+            if (storageHandlers.isEmpty()) {
+                return;
+            }
 
-            for(StorageHandler s : storageHandlers)
-                if(s.getPriority() < handler.getPriority()) handler = s;
+            List<StorageHandler> handlers = new ArrayList<>(storageHandlers.keySet());
+            StorageHandler handler = handlers.get(0);
 
-            for(StorageHandler s : storageHandlers)
-                if(s.getPriority() > handler.getPriority() && s.isAvailable()) handler = s;
+            for (StorageHandler s : handlers) {
+                if (s.getPriority() < handler.getPriority()) {
+                    handler = s;
+                }
+            }
 
-            CompareResult result = comparator.load(handler);
-            if(result.isCleared()) this.clear();
+            for (StorageHandler s : handlers) {
+                if (s.getPriority() > handler.getPriority() && s.isAvailable()) {
+                    handler = s;
+                }
+            }
 
-            for(Map.Entry<JsonObject, ComparatorAction> r : result.getComparedOutput().entrySet()) {
-                if(r.getValue() == ComparatorAction.ADD) {
-                    this.add(gson.fromJson(r.getKey(), (Type) E));
+            CompareResult result = storageHandlers.get(handler).load(handler);
+            if (result.isCleared()) {
+                this.clear();
+            }
+
+            for (Map.Entry<JsonObject, ComparatorAction> r : result.getComparedOutput().entrySet()) {
+                if (r.getValue() == ComparatorAction.ADD) {
+                    this.add(excludedGson.fromJson(r.getKey(), (Type) E));
                 }
 
-                if(r.getValue() == ComparatorAction.REMOVE) {
+                if (r.getValue() == ComparatorAction.REMOVE) {
                     JsonObject object = r.getKey();
-                    this.removeIf(E -> gson.fromJson(gson.toJson(E), JsonObject.class)
+                    this.removeIf(E -> excludedGson.fromJson(excludedGson.toJson(E), JsonObject.class)
                             .get(result.getKey()).equals(object.get(result.getKey())));
                 }
 
-                if(r.getValue() == ComparatorAction.UPDATE) {
+                if (r.getValue() == ComparatorAction.UPDATE) {
                     JsonObject object = r.getKey();
                     JsonObject updateObject = null;
                     int val = -1;
-                    for(int i = 0; i < this.size(); i++) {
+                    for (int i = 0; i < this.size(); i++) {
                         JsonObject temp = JsonUtils.parseString(new Gson().toJson(get(i))).getAsJsonObject();
-                        if(temp.get(result.getKey()).equals(object.get(result.getKey()))) {
+                        if (temp.get(result.getKey()).equals(object.get(result.getKey()))) {
                             updateObject = temp;
                             val = i;
                             break;
                         }
                     }
 
-                    if(updateObject != null) {
-                        for(String updateKey : JsonUtils.keySet(object)) {
+                    if (updateObject != null) {
+                        for (String updateKey : JsonUtils.keySet(object)) {
 
                             updateObject.remove(updateKey);
                             updateObject.add(updateKey, object.get(updateKey));
@@ -107,57 +119,81 @@ public class StorageList<E> extends ArrayList<E> implements Storage {
 
                         remove(val);
                         add(new Gson().fromJson(updateObject, (Type) E));
-
                     }
                 }
+            }
+
+            // Duplicate check
+            if (key != null) {
+                Map<JsonElement, JsonObject> keyedDuplicate = new HashMap<>();
+                for (JsonElement o : result.getRawOutput()) {
+                    JsonObject object = o.getAsJsonObject();
+                    keyedDuplicate.put(object.get(key), object);
+                }
+                List<E> removeDuplicates = new ArrayList<>();
+                for (E e : this) {
+                    JsonObject object = excludedGson.toJsonTree(e).getAsJsonObject();
+                    JsonElement objectKey = object.get(key);
+                    if (objectKey == null) {
+                        continue;
+                    }
+                    System.out.println(objectKey.toString());
+                    JsonObject correct = keyedDuplicate.get(objectKey);
+                    if (correct == null) {
+                        continue;
+                    }
+                    for (String elementKey : JsonUtils.keySet(correct)) {
+                        if (object.get(elementKey) == null || !object.get(elementKey).equals(correct.get(elementKey))) {
+                            removeDuplicates.add(e);
+                            break;
+                        }
+                    }
+                }
+                removeIf(removeDuplicates::contains);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+        loadEvents.forEach(Runnable::run);
     }
 
     @Override
-    public void load(boolean async) {
-        if(async) {
-            new Thread(this::load).start();
-            return;
-        }
-
-        load();
+    public void loadAsync() {
+        new Thread(this::load).start();
     }
 
     @Override
     public void save() {
         JsonArray array = new JsonArray();
-        for(E o : this) {
-            array.add(JsonUtils.parseString(gson.toJson(o)));
+        for (E o : this) {
+            array.add(excludedGson.toJsonTree(o));
         }
-
-        CompareResult result = comparator.save(array);
-        for(StorageHandler s : storageHandlers)
-            s.save(result);
-
+        for (Map.Entry<StorageHandler, Comparator> e : storageHandlers.entrySet()) {
+            e.getKey().save(e.getValue().save(array));
+        }
+        saveEvents.forEach(Runnable::run);
     }
 
     @Override
-    public void save(boolean async) {
-        if(async)
-            new Thread(this::save).start();
-        else
-            save();
+    public void saveAsync() {
+        new Thread(this::save);
     }
 
     @Override
     public void setAutoLoad(long period, TimeUnit unit) {
         autoLoad = Executors.newScheduledThreadPool(1);
-        if(period <= 0) return;
+        if (period <= 0) {
+            return;
+        }
         autoLoad.scheduleAtFixedRate(this::load, 0, period, unit);
     }
 
     @Override
     public void setAutoSave(long period, TimeUnit unit) {
         autoSave = Executors.newScheduledThreadPool(1);
-        if(period <= 0) return;
+        if (period <= 0) {
+            return;
+        }
         autoSave.scheduleAtFixedRate(this::save, 0, period, unit);
     }
 
@@ -168,17 +204,23 @@ public class StorageList<E> extends ArrayList<E> implements Storage {
 
     @Override
     public void migrate(MigrateMode mode) {
-        int priority = storageHandlers.get(0).getPriority();
+        int priority = new ArrayList<>(storageHandlers.keySet()).get(0).getPriority();
         switch (mode) {
             case HIGHEST_AVAILABLE_PRIORITY:
-                for(StorageHandler handler : storageHandlers)
-                    if(handler.getPriority() > priority && handler.isAvailable()) priority = handler.getPriority();
+                for (StorageHandler handler : storageHandlers.keySet()) {
+                    if (handler.getPriority() > priority && handler.isAvailable()) {
+                        priority = handler.getPriority();
+                    }
+                }
                 break;
             case MOST_COMMON_DATA:
                 break;
             case HIGHEST_PRIORITY:
-                for(StorageHandler handler : storageHandlers)
-                    if(handler.getPriority() > priority) priority = handler.getPriority();
+                for (StorageHandler handler : storageHandlers.keySet()) {
+                    if (handler.getPriority() > priority) {
+                        priority = handler.getPriority();
+                    }
+                }
                 break;
         }
         migrate(priority);
@@ -188,16 +230,48 @@ public class StorageList<E> extends ArrayList<E> implements Storage {
     public void migrate(int priority) {
         StorageHandler handler = null;
         try {
-            for(StorageHandler s : storageHandlers)
-                if(s.getPriority() == priority) handler = s;
+            for (StorageHandler s : storageHandlers.keySet()) {
+                if (s.getPriority() == priority) {
+                    handler = s;
+                }
+            }
 
-            if(handler == null) throw new HandlerNotAvailableExcpetion(priority);
+            if (handler == null) {
+                throw new HandlerNotAvailableExcpetion(priority);
+            }
         } catch (HandlerNotAvailableExcpetion e) {
             e.printStackTrace();
         }
 
         JsonArray data = handler.load();
-        for(StorageHandler s : storageHandlers)
-            if(s != handler) s.save(comparator.save(data));
+        if(data == null) return;
+        for (StorageHandler s : storageHandlers.keySet()) {
+            if (s != handler) {
+                s.save(storageHandlers.get(s).save(data));
+            }
+        }
+    }
+
+    @Override
+    public void onLoadEvent(Runnable runnable) {
+        loadEvents.add(runnable);
+    }
+
+    @Override
+    public void onSaveEvent(Runnable runnable) {
+        saveEvents.add(runnable);
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        if(autoLoad != null) {
+            autoLoad.shutdownNow();
+            autoLoad = null;
+        }
+        if(autoSave != null) {
+            autoSave.shutdownNow();
+            autoSave = null;
+        }
+        super.finalize();
     }
 }
