@@ -22,16 +22,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import static com.noahhusby.lib.data.storage.StorageUtil.*;
-
 public class StorageList<E> extends ArrayList<E> implements Storage {
 
     @Getter
     private final String key;
-
     private final Map<StorageHandler, Comparator> storageHandlers = new HashMap<>();
-
     private Object E;
+
+    private Gson gson = StorageUtil.excludedGson;
 
     public StorageList(Class<E> clazz) {
         this.E = clazz;
@@ -88,12 +86,12 @@ public class StorageList<E> extends ArrayList<E> implements Storage {
 
             for (Map.Entry<JsonObject, ComparatorAction> r : result.getComparedOutput().entrySet()) {
                 if (r.getValue() == ComparatorAction.ADD) {
-                    this.add(excludedGson.fromJson(r.getKey(), (Type) E));
+                    this.add(gson.fromJson(r.getKey(), (Type) E));
                 }
 
                 if (r.getValue() == ComparatorAction.REMOVE) {
                     JsonObject object = r.getKey();
-                    this.removeIf(E -> excludedGson.fromJson(excludedGson.toJson(E), JsonObject.class)
+                    this.removeIf(E -> gson.fromJson(gson.toJson(E), JsonObject.class)
                             .get(result.getKey()).equals(object.get(result.getKey())));
                 }
 
@@ -132,7 +130,7 @@ public class StorageList<E> extends ArrayList<E> implements Storage {
                 }
                 List<E> removeDuplicates = new ArrayList<>();
                 for (E e : this) {
-                    JsonObject object = excludedGson.toJsonTree(e).getAsJsonObject();
+                    JsonObject object = gson.toJsonTree(e).getAsJsonObject();
                     JsonElement objectKey = object.get(key);
                     if (objectKey == null) {
                         continue;
@@ -165,7 +163,7 @@ public class StorageList<E> extends ArrayList<E> implements Storage {
     public void save() {
         JsonArray array = new JsonArray();
         for (E o : this) {
-            array.add(excludedGson.toJsonTree(o));
+            array.add(gson.toJsonTree(o));
         }
         for (Map.Entry<StorageHandler, Comparator> e : storageHandlers.entrySet()) {
             e.getKey().save(e.getValue().save(array));
@@ -259,6 +257,10 @@ public class StorageList<E> extends ArrayList<E> implements Storage {
     @Override
     public void onSaveEvent(Runnable runnable) {
         saveEvents.add(runnable);
+    }
+
+    public void setGson(Gson gson) {
+        this.gson = gson;
     }
 
     @Override

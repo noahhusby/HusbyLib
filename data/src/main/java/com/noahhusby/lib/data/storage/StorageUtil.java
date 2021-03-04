@@ -12,7 +12,7 @@ import java.util.Objects;
 @UtilityClass
 public class StorageUtil {
 
-    public static final Gson excludedGson = new GsonBuilder()
+    protected static final Gson excludedGson = new GsonBuilder()
             .excludeFieldsWithoutExposeAnnotation()
             .serializeNulls()
             .create();
