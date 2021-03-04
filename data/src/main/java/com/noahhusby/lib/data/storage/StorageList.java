@@ -140,8 +140,8 @@ public class StorageList<E> extends ArrayList<E> implements Storage {
                         continue;
                     }
                     // Re-serialize to check custom rules
-                    object = gson.fromJson(gson.toJsonTree(e), JsonObject.class);
-                    correct = gson.fromJson(gson.toJsonTree(correct), JsonObject.class);
+                    object = gson.toJsonTree(gson.fromJson(object, (Type) E)).getAsJsonObject();
+                    correct = gson.toJsonTree(gson.fromJson(correct, (Type) E)).getAsJsonObject();
                     for (String elementKey : JsonUtils.keySet(correct)) {
                         if (object.get(elementKey) == null || !object.get(elementKey).equals(correct.get(elementKey))) {
                             removeDuplicates.add(e);
