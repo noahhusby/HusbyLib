@@ -175,7 +175,7 @@ public class StorageList<E> extends ArrayList<E> implements Storage {
 
     @Override
     public void saveAsync() {
-        new Thread(this::save);
+        new Thread(this::save).start();
     }
 
     @Override
