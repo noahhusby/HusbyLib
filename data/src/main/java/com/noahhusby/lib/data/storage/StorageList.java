@@ -137,7 +137,6 @@ public class StorageList<E> extends ArrayList<E> implements Storage {
                     if (objectKey == null) {
                         continue;
                     }
-                    System.out.println(objectKey.toString());
                     JsonObject correct = keyedDuplicate.get(objectKey);
                     if (correct == null) {
                         continue;
