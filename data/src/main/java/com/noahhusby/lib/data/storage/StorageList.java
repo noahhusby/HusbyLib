@@ -139,6 +139,8 @@ public class StorageList<E> extends ArrayList<E> implements Storage {
                     if (correct == null) {
                         continue;
                     }
+                    // Re-serialize to check custom rules
+                    object = gson.fromJson(gson.toJsonTree(e), (Type) E);
                     for (String elementKey : JsonUtils.keySet(correct)) {
                         if (object.get(elementKey) == null || !object.get(elementKey).equals(correct.get(elementKey))) {
                             removeDuplicates.add(e);
