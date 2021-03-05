@@ -11,7 +11,6 @@ import com.noahhusby.lib.data.storage.compare.CompareResult;
 import com.noahhusby.lib.data.storage.compare.CutComparator;
 import com.noahhusby.lib.data.storage.compare.ValueComparator;
 import com.noahhusby.lib.data.storage.handlers.StorageHandler;
-import lombok.Getter;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -24,9 +23,7 @@ import java.util.concurrent.TimeUnit;
 
 public class StorageList<E> extends ArrayList<E> implements Storage {
 
-    @Getter
     private final String key;
-    @Getter
     private final Map<StorageHandler, Comparator> storageHandlers = new HashMap<>();
     private Object E;
 
@@ -51,6 +48,11 @@ public class StorageList<E> extends ArrayList<E> implements Storage {
     @Override
     public void registerHandler(StorageHandler handler, Comparator comparator) {
         storageHandlers.put(handler, comparator);
+    }
+
+    @Override
+    public Map<StorageHandler, Comparator> getHandlers() {
+        return storageHandlers;
     }
 
     @Override
