@@ -26,6 +26,7 @@ public class StorageList<E> extends ArrayList<E> implements Storage {
 
     @Getter
     private final String key;
+    @Getter
     private final Map<StorageHandler, Comparator> storageHandlers = new HashMap<>();
     private Object E;
 
@@ -45,6 +46,11 @@ public class StorageList<E> extends ArrayList<E> implements Storage {
     @Override
     public void registerHandler(StorageHandler handler) {
         storageHandlers.put(handler, key == null ? new CutComparator() : new ValueComparator(key));
+    }
+
+    @Override
+    public void registerHandler(StorageHandler handler, Comparator comparator) {
+        storageHandlers.put(handler, comparator);
     }
 
     @Override

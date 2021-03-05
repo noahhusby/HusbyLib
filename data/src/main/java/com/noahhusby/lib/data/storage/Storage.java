@@ -1,11 +1,14 @@
 package com.noahhusby.lib.data.storage;
 
+import com.noahhusby.lib.data.storage.compare.Comparator;
 import com.noahhusby.lib.data.storage.handlers.StorageHandler;
 
 import java.util.concurrent.TimeUnit;
 
 public interface Storage {
     void registerHandler(StorageHandler handler);
+
+    void registerHandler(StorageHandler handler, Comparator comparator);
 
     void unregisterHandler(StorageHandler handler);
 
