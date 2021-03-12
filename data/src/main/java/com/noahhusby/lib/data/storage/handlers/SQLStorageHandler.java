@@ -42,6 +42,8 @@ public class SQLStorageHandler implements StorageHandler {
     private Storage storage;
     private boolean repaired;
 
+    public String filter = "";
+
     public SQLStorageHandler(String table, Structure structure) {
         this(new MySQL(), table, structure);
     }
@@ -152,7 +154,7 @@ public class SQLStorageHandler implements StorageHandler {
         if (!isAvailable()) {
             return new JsonArray();
         }
-        Result result = database.select(new Select(table, "*", ""));
+        Result result = database.select(new Select(table, "*", filter));
         JsonArray array = new JsonArray();
 
         for (Row r : result.getRows()) {
