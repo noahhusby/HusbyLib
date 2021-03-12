@@ -179,6 +179,10 @@ public class SQLStorageHandler implements StorageHandler {
         return getDatabase().isConnected() && repaired;
     }
 
+    public void setFilter(String filter) {
+        this.filter = filter;
+    }
+
     private void onLoop() {
         if (!getDatabase().isConnected()) {
             getDatabase().connect();
