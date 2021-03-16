@@ -30,8 +30,8 @@ public class ValueComparator extends KeyComparator {
                 continue;
             }
             JsonObject object = e.getValue();
-            JsonObject lastObject = lastSave.get(object.get(key));
-            JsonObject lastLoadObject = lastLoad.get(object.get(key));
+            JsonObject lastObject = lastSave.get(e.getKey());
+            JsonObject lastLoadObject = lastLoad.get(e.getKey());
             if (lastObject != null) {
                 for (String elementKey : JsonUtils.keySet(object)) {
                     if (lastObject.get(elementKey) == null || !lastObject.get(elementKey).equals(object.get(elementKey)) || lastLoadObject.get(elementKey) == null || !lastLoadObject.get(elementKey).equals(object.get(elementKey))) {
