@@ -3,6 +3,7 @@ package com.noahhusby.lib.data.storage.handlers;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.noahhusby.lib.data.storage.Storage;
+import com.noahhusby.lib.data.storage.StorageUtil;
 import com.noahhusby.lib.data.storage.compare.CompareResult;
 
 import java.io.File;
@@ -51,7 +52,7 @@ public class LocalStorageHandler implements StorageHandler {
     @Override
     public JsonArray load() {
         try {
-            return new Gson().fromJson(new FileReader(file), JsonArray.class);
+            return StorageUtil.gson.fromJson(new FileReader(file), JsonArray.class);
         } catch (IOException e) {
             e.printStackTrace();
         }

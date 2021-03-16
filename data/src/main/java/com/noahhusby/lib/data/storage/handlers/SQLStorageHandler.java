@@ -17,6 +17,7 @@ import com.noahhusby.lib.data.sql.actions.UpdateValue;
 import com.noahhusby.lib.data.sql.structure.Structure;
 import com.noahhusby.lib.data.sql.structure.StructureElement;
 import com.noahhusby.lib.data.storage.Storage;
+import com.noahhusby.lib.data.storage.StorageUtil;
 import com.noahhusby.lib.data.storage.compare.ComparatorAction;
 import com.noahhusby.lib.data.storage.compare.CompareResult;
 
@@ -32,7 +33,6 @@ import java.util.concurrent.TimeUnit;
 
 public class SQLStorageHandler implements StorageHandler {
     private ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
-    private final Gson gson = new GsonBuilder().serializeNulls().create();
     private ISQLDatabase database;
 
     private final String table;
@@ -96,7 +96,7 @@ public class SQLStorageHandler implements StorageHandler {
                         }
                         keys.add(key);
                         if (object.get(key).isJsonObject() || object.get(key).isJsonArray()) {
-                            objects.add(gson.toJson(object.get(key)));
+                            objects.add(StorageUtil.gson.toJson(object.get(key)));
                         } else {
                             if (object.get(key).isJsonNull()) {
                                 objects.add(null);
@@ -120,7 +120,7 @@ public class SQLStorageHandler implements StorageHandler {
                         }
                         if (update == null) {
                             if (object.get(key).isJsonObject() || object.get(key).isJsonArray()) {
-                                update = new UpdateValue(key, gson.toJson(object.get(key)));
+                                update = new UpdateValue(key, StorageUtil.gson.toJson(object.get(key)));
                             } else {
                                 if (object.get(key).isJsonNull()) {
                                     update = new UpdateValue(key, null);
@@ -131,7 +131,7 @@ public class SQLStorageHandler implements StorageHandler {
                             continue;
                         }
                         if (object.get(key).isJsonObject() || object.get(key).isJsonArray()) {
-                            update.add(key, gson.toJson(object.get(key)));
+                            update.add(key, StorageUtil.gson.toJson(object.get(key)));
                         } else if(object.get(key).isJsonNull()) {
                             update.add(key, "");
                         } else {
@@ -160,7 +160,7 @@ public class SQLStorageHandler implements StorageHandler {
         JsonArray array = new JsonArray();
 
         for (Row r : result.getRows()) {
-            array.add(gson.fromJson(gson.toJson(r.getColumns()), JsonObject.class));
+            array.add(StorageUtil.gson.fromJson(StorageUtil.gson.toJson(r.getColumns()), JsonObject.class));
         }
 
         return array;
