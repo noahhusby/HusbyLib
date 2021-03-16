@@ -24,6 +24,7 @@ import com.noahhusby.lib.data.storage.compare.CompareResult;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -141,8 +142,7 @@ public class SQLStorageHandler implements StorageHandler {
 
                     String obj = object.get(result.getKey()).isJsonNull() ? null : object.get(result.getKey()).getAsString();
 
-                    database.execute(new Update(table, update, String.format("%s='%s'", result.getKey(),
-                            obj)));
+                    database.execute(new Update(table, update, String.format("%s='%s'", result.getKey(), obj)));
                 }
             }
 
@@ -237,5 +237,9 @@ public class SQLStorageHandler implements StorageHandler {
     public void destroy() {
         executor.shutdownNow();
         executor = null;
+        try {
+            database.getConnection().close();
+            database.close();
+        } catch (Exception ignored) { }
     }
 }
