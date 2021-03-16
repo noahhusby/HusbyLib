@@ -132,6 +132,8 @@ public class SQLStorageHandler implements StorageHandler {
                         }
                         if (object.get(key).isJsonObject() || object.get(key).isJsonArray()) {
                             update.add(key, gson.toJson(object.get(key)));
+                        } else if(object.get(key).isJsonNull()) {
+                            update.add(key, "");
                         } else {
                             update.add(key, object.get(key).getAsString());
                         }
