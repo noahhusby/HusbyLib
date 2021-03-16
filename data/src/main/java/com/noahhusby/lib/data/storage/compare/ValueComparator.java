@@ -34,7 +34,7 @@ public class ValueComparator extends KeyComparator {
             JsonObject lastLoadObject = lastLoad.get(object.get(key));
             if (lastObject != null) {
                 for (String elementKey : JsonUtils.keySet(object)) {
-                    if (lastObject.get(elementKey) == null || !lastObject.get(elementKey).equals(object.get(elementKey)) || lastLoadObject == null || !lastLoadObject.get(elementKey).equals(object.get(elementKey))) {
+                    if (lastObject.get(elementKey) == null || !lastObject.get(elementKey).equals(object.get(elementKey)) || lastLoadObject.get(elementKey) == null || !lastLoadObject.get(elementKey).equals(object.get(elementKey))) {
                         compared.put(e.getValue(), ComparatorAction.UPDATE);
                     }
                 }
