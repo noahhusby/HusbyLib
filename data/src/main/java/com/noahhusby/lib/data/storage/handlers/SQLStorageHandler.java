@@ -31,7 +31,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class SQLStorageHandler implements StorageHandler {
-    private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+    private ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
     private final Gson gson = new GsonBuilder().serializeNulls().create();
     private ISQLDatabase database;
 
@@ -229,5 +229,11 @@ public class SQLStorageHandler implements StorageHandler {
 
             repaired = true;
         }
+    }
+
+    @Override
+    public void destroy() {
+        executor.shutdownNow();
+        executor = null;
     }
 }

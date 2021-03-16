@@ -270,12 +270,8 @@ public class StorageList<E> extends ArrayList<E> implements Storage {
         saveEvents.add(runnable);
     }
 
-    public void setGson(Gson gson) {
-        this.gson = gson;
-    }
-
     @Override
-    protected void finalize() throws Throwable {
+    public void destroy() {
         if(autoLoad != null) {
             autoLoad.shutdownNow();
             autoLoad = null;
@@ -284,6 +280,19 @@ public class StorageList<E> extends ArrayList<E> implements Storage {
             autoSave.shutdownNow();
             autoSave = null;
         }
+        for(StorageHandler handler : storageHandlers.keySet()) {
+            handler.destroy();
+        }
+        storageHandlers.clear();
+    }
+
+    public void setGson(Gson gson) {
+        this.gson = gson;
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        destroy();
         super.finalize();
     }
 }

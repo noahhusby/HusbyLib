@@ -74,4 +74,8 @@ public class LocalStorageHandler implements StorageHandler {
         return true;
     }
 
+    @Override
+    public void destroy() {
+
+    }
 }

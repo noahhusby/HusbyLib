@@ -1,12 +1,13 @@
 package com.noahhusby.lib.data.storage;
 
+import com.noahhusby.lib.data.IDestroyable;
 import com.noahhusby.lib.data.storage.compare.Comparator;
 import com.noahhusby.lib.data.storage.handlers.StorageHandler;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public interface Storage {
+public interface Storage extends IDestroyable {
     void registerHandler(StorageHandler handler);
 
     void registerHandler(StorageHandler handler, Comparator comparator);
@@ -38,4 +39,6 @@ public interface Storage {
     void onLoadEvent(Runnable runnable);
 
     void onSaveEvent(Runnable runnable);
+
+    void destroy();
 }
