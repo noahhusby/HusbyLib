@@ -8,9 +8,12 @@ import com.noahhusby.lib.data.sql.actions.Query;
 import com.noahhusby.lib.data.sql.actions.Result;
 import com.noahhusby.lib.data.sql.actions.Row;
 import com.noahhusby.lib.data.sql.actions.Select;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -19,7 +22,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class MySQL extends SQLDatabase {
 
-    private Gson gson = new Gson();
+    private final Gson gson = new Gson();
 
     public MySQL() {
     }
@@ -28,8 +31,8 @@ public class MySQL extends SQLDatabase {
         super(credentials);
     }
 
+    private HikariDataSource ds;
     private Connection connection;
-    private MysqlDataSource data = new MysqlDataSource();
 
     @Override
     public Connection getConnection() {
@@ -38,16 +41,16 @@ public class MySQL extends SQLDatabase {
 
     @Override
     public boolean connect() {
-        Credentials cred = getCredentials();
-        data.setServerName(cred.getHost());
-        data.setPort(cred.getPort());
-        data.setDatabaseName(cred.getDatabase());
-        data.setUser(cred.getUsername());
-        data.setPassword(cred.getPassword());
+        HikariConfig config = getCredentials().toHikariConfig("jdbc:mysql://");
+        config.addDataSourceProperty("prepStmtCacheSize", "250");
+        config.addDataSourceProperty("prepStmtCacheSqlLimit", 2048);
+        config.addDataSourceProperty("cachePrepStmts", true);
+        config.addDataSourceProperty("useServerPrepStmts", true);
+        ds = new HikariDataSource(getCredentials().toHikariConfig("jdbc:mysql://"));
+
 
         try {
-            data.setAllowMultiQueries(true);
-            connection = data.getConnection();
+            connection = ds.getConnection();
         } catch (SQLException e) {
             return false;
         }
@@ -62,7 +65,7 @@ public class MySQL extends SQLDatabase {
         }
 
         try {
-            if (data.getConnection().isClosed()) {
+            if (connection.isClosed()) {
                 return false;
             }
         } catch (SQLException e) {
@@ -76,8 +79,8 @@ public class MySQL extends SQLDatabase {
     public boolean close() {
         try {
             connection.close();
+            ds.close();
         } catch (SQLException e) {
-            e.printStackTrace();
             return false;
         }
 
@@ -108,11 +111,11 @@ public class MySQL extends SQLDatabase {
 
     @Override
     public Result select(Select select) {
-        Statement stmt;
+        PreparedStatement stmt;
         ResultSet res;
         try {
-            stmt = connection.createStatement();
-            res = stmt.executeQuery(select.query());
+            stmt = connection.prepareStatement(select.query());
+            res = stmt.executeQuery();
             ResultSetMetaData resmeta = res.getMetaData();
             Result result = new Result();
 
@@ -147,8 +150,6 @@ public class MySQL extends SQLDatabase {
 
             res.close();
             stmt.close();
-            System.gc();
-
             return result;
 
         } catch (SQLException e) {

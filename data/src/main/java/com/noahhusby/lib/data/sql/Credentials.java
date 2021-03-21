@@ -1,5 +1,7 @@
 package com.noahhusby.lib.data.sql;
 
+import com.zaxxer.hikari.HikariConfig;
+
 public class Credentials {
     private String host = "";
     private int port = 3306;
@@ -56,5 +58,13 @@ public class Credentials {
 
     public String getDatabase() {
         return database;
+    }
+
+    public HikariConfig toHikariConfig(String base) {
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl(String.format("%s%s:%s/%s", base, host, port, database));
+        config.setUsername(user);
+        config.setPassword(password);
+        return config;
     }
 }
