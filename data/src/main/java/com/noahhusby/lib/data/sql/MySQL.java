@@ -46,6 +46,7 @@ public class MySQL extends SQLDatabase {
         config.addDataSourceProperty("prepStmtCacheSqlLimit", 2048);
         config.addDataSourceProperty("cachePrepStmts", true);
         config.addDataSourceProperty("useServerPrepStmts", true);
+        config.addDataSourceProperty("verifyServerCertificate", false);
         ds = new HikariDataSource(getCredentials().toHikariConfig("jdbc:mysql://"));
 
 
