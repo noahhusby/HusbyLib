@@ -178,7 +178,7 @@ public class SQLStorageHandler implements StorageHandler {
 
     @Override
     public boolean isAvailable() {
-        return getDatabase().isConnected() && repaired;
+        return repaired;
     }
 
     public void setFilter(String filter) {
@@ -206,6 +206,9 @@ public class SQLStorageHandler implements StorageHandler {
                         }
                         getDatabase().execute(new Custom(String.format("CREATE TABLE %s (%s);", table, query.toString())));
                     } else {
+                        if (!getDatabase().isConnected()) {
+                            getDatabase().connect();
+                        }
                         ResultSetMetaData metaData = getDatabase().getConnection().createStatement().executeQuery(String.format("SELECT * FROM %s", table)).getMetaData();
                         List<String> columnNames = new ArrayList<>();
                         for (int i = 1; i <= metaData.getColumnCount(); i++) {
