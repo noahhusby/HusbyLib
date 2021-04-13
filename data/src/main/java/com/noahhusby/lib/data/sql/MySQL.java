@@ -29,6 +29,14 @@ public class MySQL extends SQLDatabase {
 
     public MySQL(Credentials credentials) {
         super(credentials);
+        HikariConfig config = getCredentials().toHikariConfig("jdbc:mysql://");
+        config.addDataSourceProperty("prepStmtCacheSize", "250");
+        config.addDataSourceProperty("prepStmtCacheSqlLimit", 2048);
+        config.addDataSourceProperty("cachePrepStmts", true);
+        config.addDataSourceProperty("useServerPrepStmts", true);
+        config.addDataSourceProperty("verifyServerCertificate", false);
+        config.addDataSourceProperty("useSSL", false);
+        ds = new HikariDataSource(config);
     }
 
     private HikariDataSource ds;
@@ -41,16 +49,6 @@ public class MySQL extends SQLDatabase {
 
     @Override
     public boolean connect() {
-        HikariConfig config = getCredentials().toHikariConfig("jdbc:mysql://");
-        config.addDataSourceProperty("prepStmtCacheSize", "250");
-        config.addDataSourceProperty("prepStmtCacheSqlLimit", 2048);
-        config.addDataSourceProperty("cachePrepStmts", true);
-        config.addDataSourceProperty("useServerPrepStmts", true);
-        config.addDataSourceProperty("verifyServerCertificate", false);
-        config.addDataSourceProperty("useSSL", false);
-        ds = new HikariDataSource(config);
-
-
         try {
             connection = ds.getConnection();
         } catch (SQLException e) {
@@ -78,19 +76,27 @@ public class MySQL extends SQLDatabase {
     }
 
     @Override
-    public boolean close() {
+    public boolean disconnect() {
         try {
             connection.close();
-            ds.close();
         } catch (SQLException e) {
             return false;
         }
+        return true;
+    }
 
+    @Override
+    public boolean close() {
+        disconnect();
+        ds.close();
         return true;
     }
 
     @Override
     public boolean execute(Query query) {
+        if(!isConnected()) {
+            connect();
+        }
         Statement stmt = null;
         try {
             stmt = connection.createStatement();
@@ -101,6 +107,7 @@ public class MySQL extends SQLDatabase {
             if (stmt != null) {
                 try {
                     stmt.close();
+                    disconnect();
                     return true;
                 } catch (SQLException e) {
                     e.printStackTrace();
@@ -108,11 +115,15 @@ public class MySQL extends SQLDatabase {
             }
         }
 
+        disconnect();
         return false;
     }
 
     @Override
     public Result select(Select select) {
+        if(!isConnected()) {
+            connect();
+        }
         PreparedStatement stmt;
         ResultSet res;
         try {
@@ -152,10 +163,12 @@ public class MySQL extends SQLDatabase {
 
             res.close();
             stmt.close();
+            disconnect();
             return result;
 
         } catch (SQLException e) {
             e.printStackTrace();
+            disconnect();
             return new Result();
         }
     }

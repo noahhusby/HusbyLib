@@ -16,6 +16,8 @@ public interface ISQLDatabase {
 
     boolean connect();
 
+    boolean disconnect();
+
     boolean isConnected();
 
     boolean close();

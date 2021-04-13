@@ -186,13 +186,13 @@ public class SQLStorageHandler implements StorageHandler {
     }
 
     private void onLoop() {
-        if (!getDatabase().isConnected()) {
-            getDatabase().connect();
-            return;
-        }
 
         if (!repaired) {
             try {
+                if (!getDatabase().isConnected()) {
+                    getDatabase().connect();
+                }
+
                 if (structure.isRepair()) {
                     DatabaseMetaData dbm = getDatabase().getConnection().getMetaData();
                     database.execute(new Custom("SET SQL_SAFE_UPDATES = 0;"));
@@ -229,6 +229,9 @@ public class SQLStorageHandler implements StorageHandler {
                 e.printStackTrace();
             }
 
+            if(getDatabase().isConnected()) {
+                getDatabase().disconnect();
+            }
             repaired = true;
         }
     }

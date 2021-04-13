@@ -123,6 +123,7 @@ public class StorageList<E> extends ArrayList<E> implements Storage {
                             updateObject.add(updateKey, object.get(updateKey));
                         }
 
+
                         remove(val);
                         add(new Gson().fromJson(updateObject, (Type) E));
                     }
