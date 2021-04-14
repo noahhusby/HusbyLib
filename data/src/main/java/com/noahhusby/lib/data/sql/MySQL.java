@@ -40,66 +40,31 @@ public class MySQL extends SQLDatabase {
     }
 
     private HikariDataSource ds;
-    private Connection connection;
 
     @Override
     public Connection getConnection() {
-        return connection;
-    }
-
-    @Override
-    public boolean connect() {
         try {
-            connection = ds.getConnection();
+            return ds.getConnection();
         } catch (SQLException e) {
-            return false;
+            return null;
         }
-
-        return true;
-    }
-
-    @Override
-    public boolean isConnected() {
-        if (connection == null) {
-            return false;
-        }
-
-        try {
-            if (connection.isClosed()) {
-                return false;
-            }
-        } catch (SQLException e) {
-            return false;
-        }
-
-        return true;
-    }
-
-    @Override
-    public boolean disconnect() {
-        try {
-            connection.close();
-        } catch (SQLException e) {
-            return false;
-        }
-        return true;
     }
 
     @Override
     public boolean close() {
-        disconnect();
         ds.close();
         return true;
     }
 
     @Override
     public boolean execute(Query query) {
-        if(!isConnected()) {
-            connect();
+        Connection con = getConnection();
+        if(con == null) {
+            return false;
         }
         Statement stmt = null;
         try {
-            stmt = connection.createStatement();
+            stmt = con.createStatement();
             stmt.execute(query.query());
         } catch (SQLException e) {
             e.printStackTrace();
@@ -107,7 +72,7 @@ public class MySQL extends SQLDatabase {
             if (stmt != null) {
                 try {
                     stmt.close();
-                    disconnect();
+                    con.close();
                     return true;
                 } catch (SQLException e) {
                     e.printStackTrace();
@@ -115,19 +80,24 @@ public class MySQL extends SQLDatabase {
             }
         }
 
-        disconnect();
+        try {
+            con.close();
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
         return false;
     }
 
     @Override
     public Result select(Select select) {
-        if(!isConnected()) {
-            connect();
+        Connection con = getConnection();
+        if(con == null) {
+            return new Result();
         }
         PreparedStatement stmt;
         ResultSet res;
         try {
-            stmt = connection.prepareStatement(select.query());
+            stmt = con.prepareStatement(select.query());
             res = stmt.executeQuery();
             ResultSetMetaData resmeta = res.getMetaData();
             Result result = new Result();
@@ -163,12 +133,16 @@ public class MySQL extends SQLDatabase {
 
             res.close();
             stmt.close();
-            disconnect();
+            con.close();
             return result;
 
         } catch (SQLException e) {
             e.printStackTrace();
-            disconnect();
+            try {
+                con.close();
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
             return new Result();
         }
     }

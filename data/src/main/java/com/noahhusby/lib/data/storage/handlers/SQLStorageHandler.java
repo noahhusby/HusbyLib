@@ -21,6 +21,7 @@ import com.noahhusby.lib.data.storage.StorageUtil;
 import com.noahhusby.lib.data.storage.compare.ComparatorAction;
 import com.noahhusby.lib.data.storage.compare.CompareResult;
 
+import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -189,12 +190,13 @@ public class SQLStorageHandler implements StorageHandler {
 
         if (!repaired) {
             try {
-                if (!getDatabase().isConnected()) {
-                    getDatabase().connect();
+                Connection con = getDatabase().getConnection();
+                if(con == null) {
+                    return;
                 }
 
                 if (structure.isRepair()) {
-                    DatabaseMetaData dbm = getDatabase().getConnection().getMetaData();
+                    DatabaseMetaData dbm = con.getMetaData();
                     database.execute(new Custom("SET SQL_SAFE_UPDATES = 0;"));
 
                     ResultSet tables = dbm.getTables(getDatabase().getCredentials().getDatabase(), null, table, null);
@@ -206,10 +208,7 @@ public class SQLStorageHandler implements StorageHandler {
                         }
                         getDatabase().execute(new Custom(String.format("CREATE TABLE %s (%s);", table, query.toString())));
                     } else {
-                        if (!getDatabase().isConnected()) {
-                            getDatabase().connect();
-                        }
-                        ResultSetMetaData metaData = getDatabase().getConnection().createStatement().executeQuery(String.format("SELECT * FROM %s", table)).getMetaData();
+                        ResultSetMetaData metaData = con.createStatement().executeQuery(String.format("SELECT * FROM %s", table)).getMetaData();
                         List<String> columnNames = new ArrayList<>();
                         for (int i = 1; i <= metaData.getColumnCount(); i++) {
                             columnNames.add(metaData.getColumnName(i));
@@ -228,13 +227,11 @@ public class SQLStorageHandler implements StorageHandler {
                         }
                     }
                 }
+                con.close();
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
-            if(getDatabase().isConnected()) {
-                getDatabase().disconnect();
-            }
             repaired = true;
         }
     }

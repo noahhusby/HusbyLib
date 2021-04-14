@@ -14,12 +14,6 @@ public interface ISQLDatabase {
 
     Connection getConnection();
 
-    boolean connect();
-
-    boolean disconnect();
-
-    boolean isConnected();
-
     boolean close();
 
     boolean execute(Query query);
