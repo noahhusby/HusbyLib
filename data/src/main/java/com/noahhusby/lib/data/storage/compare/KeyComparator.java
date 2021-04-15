@@ -1,5 +1,8 @@
 package com.noahhusby.lib.data.storage.compare;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.MapDifference;
+import com.google.common.collect.Maps;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -9,8 +12,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class KeyComparator implements Comparator {
-    protected Map<JsonElement, JsonObject> lastSave = new HashMap<>();
-    protected Map<JsonElement, JsonObject> lastLoad = new HashMap<>();
+    protected boolean saved = false;
+    protected boolean loaded = false;
+    protected Map<JsonElement, JsonObject> lastSave = null;
+    protected Map<JsonElement, JsonObject> lastLoad = null;
 
     protected final String key;
 
@@ -19,69 +24,68 @@ public class KeyComparator implements Comparator {
     }
 
     @Override
-    public CompareResult save(JsonArray array) {
-        return save(array, true);
-    }
-
-    protected CompareResult save(JsonArray array, boolean save) {
-        Map<JsonElement, JsonObject> keyedArray = new HashMap<>();
+    public CompareResult save(JsonArray array, StorageHandler handler) {
         Map<JsonObject, ComparatorAction> compared = new HashMap<>();
-        for (JsonElement e : array) {
-            JsonObject object = e.getAsJsonObject();
-            keyedArray.put(object.get(key), object);
-        }
+        // Get keyed arrays from current stored list and current list
+        Map<JsonElement, JsonObject> keyedSave = getKeyedArray(array);
+        Map<JsonElement, JsonObject> keyedLoad = getKeyedArray(handler.load());
 
-        // Adds object if the last save did not have the object as well as the last load
-        for (Map.Entry<JsonElement, JsonObject> e : keyedArray.entrySet()) {
-            if (!lastSave.containsKey(e.getKey()) && !lastLoad.containsKey(e.getKey())) {
-                compared.put(e.getValue(), ComparatorAction.ADD);
+        if(!saved) {
+            // Since the parent list has never been saved before, we will all of the current keys against the stored data and add what is necessary.
+            for(Map.Entry<JsonElement, JsonObject> e : keyedSave.entrySet()) {
+                if(!keyedLoad.containsKey(e.getKey())) {
+                    compared.put(e.getValue(), ComparatorAction.ADD);
+                }
+            }
+        } else {
+            MapDifference<JsonElement, JsonObject> diff = Maps.difference(keyedLoad, keyedSave);
+            for(JsonObject o : diff.entriesOnlyOnLeft().values()) {
+                compared.put(o, ComparatorAction.REMOVE);
+            }
+            for(JsonObject o : diff.entriesOnlyOnRight().values()) {
+                compared.put(o, ComparatorAction.ADD);
             }
         }
 
-        // Removes an object if the new data does not contian the key, but the last load does
-        for (Map.Entry<JsonElement, JsonObject> e : lastSave.entrySet()) {
-            if (!keyedArray.containsKey(e.getKey()) && lastLoad.containsKey(e.getKey())) {
-                compared.put(e.getValue(), ComparatorAction.REMOVE);
-            }
-        }
-
-        if (save) {
-            lastSave = keyedArray;
-        }
-
+        saved = true;
         return new CompareResult(array, compared, key, false);
     }
 
     @Override
-    public CompareResult load(StorageHandler handler) {
-        return load(handler, true);
-    }
-
-    protected CompareResult load(StorageHandler handler, boolean save) {
-        JsonArray array = handler.load();
-        Map<JsonElement, JsonObject> keyedArray = new HashMap<>();
+    public CompareResult load(JsonArray array, StorageHandler handler) {
         Map<JsonObject, ComparatorAction> compared = new HashMap<>();
-        for (JsonElement e : array) {
-            JsonObject object = e.getAsJsonObject();
-            keyedArray.put(object.get(key), object);
-        }
+        // Get keyed arrays from current stored list and current list
+        Map<JsonElement, JsonObject> keyedSave = getKeyedArray(array);
+        Map<JsonElement, JsonObject> keyedLoad = getKeyedArray(handler.load());
 
-        for (Map.Entry<JsonElement, JsonObject> e : keyedArray.entrySet()) {
-            if (!lastLoad.containsKey(e.getKey()) && !lastSave.containsKey(e.getKey())) {
-                compared.put(e.getValue(), ComparatorAction.ADD);
+        if(!loaded) {
+            // Since the data has never been loaded before, we will all of the current keys against the current data and add what is necessary.
+            for(Map.Entry<JsonElement, JsonObject> e : keyedLoad.entrySet()) {
+                if(!keyedSave.containsKey(e.getKey())) {
+                    compared.put(e.getValue(), ComparatorAction.ADD);
+                }
+            }
+        } else {
+            MapDifference<JsonElement, JsonObject> diff = Maps.difference(keyedLoad, keyedSave);
+            for(JsonObject o : diff.entriesOnlyOnLeft().values()) {
+                compared.put(o, ComparatorAction.ADD);
+            }
+            for(JsonObject o : diff.entriesOnlyOnRight().values()) {
+                compared.put(o, ComparatorAction.REMOVE);
             }
         }
 
-        for (Map.Entry<JsonElement, JsonObject> e : lastLoad.entrySet()) {
-            if (!keyedArray.containsKey(e.getKey()) && lastSave.containsKey(e.getKey())) {
-                compared.put(e.getValue(), ComparatorAction.REMOVE);
-            }
-        }
-
-        if (save) {
-            lastLoad = keyedArray;
-        }
+        loaded = true;
 
         return new CompareResult(array, compared, key, false);
+    }
+
+    protected Map<JsonElement, JsonObject> getKeyedArray(JsonArray array) {
+        Map<JsonElement, JsonObject> temp = new HashMap<>();
+        for (JsonElement e : array) {
+            JsonObject object = e.getAsJsonObject();
+            temp.put(object.get(key), object);
+        }
+        return temp;
     }
 }

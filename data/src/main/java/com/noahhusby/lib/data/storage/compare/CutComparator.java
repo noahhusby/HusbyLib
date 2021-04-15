@@ -10,7 +10,7 @@ import java.util.Map;
 
 public class CutComparator implements Comparator {
     @Override
-    public CompareResult save(JsonArray array) {
+    public CompareResult save(JsonArray array, StorageHandler handler) {
         Map<JsonObject, ComparatorAction> compared = new HashMap<>();
         for (JsonElement je : array) {
             compared.put(je.getAsJsonObject(), ComparatorAction.ADD);
@@ -20,7 +20,7 @@ public class CutComparator implements Comparator {
     }
 
     @Override
-    public CompareResult load(StorageHandler handler) {
+    public CompareResult load(JsonArray save, StorageHandler handler) {
         JsonArray array = handler.load();
         Map<JsonObject, ComparatorAction> compared = new HashMap<>();
         for (JsonElement je : array) {

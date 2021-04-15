@@ -21,17 +21,21 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class StorageList<E> extends ArrayList<E> implements Storage {
-
+/**
+ * @author Noah Husby
+ */
+public class StorageHashMap<K, V> extends HashMap<K, V> implements Storage {
     private final String key;
     private final Map<StorageHandler, Comparator> storageHandlers = new HashMap<>();
-    private Object E;
+    private Object K;
+    private Object V;
 
     private Gson gson = StorageUtil.excludedGson;
 
-    public StorageList(Class<E> clazz) {
-        this.E = clazz;
-        key = StorageUtil.getKeyAnnotation(clazz);
+    public StorageHashMap(Class<K> kClazz, Class<V> vClazz) {
+        this.K = kClazz;
+        this.V = vClazz;
+        key = StorageUtil.getKeyAnnotation(vClazz);
     }
 
     private final List<Runnable> saveEvents = new ArrayList<>();
@@ -94,71 +98,22 @@ public class StorageList<E> extends ArrayList<E> implements Storage {
 
             for (Map.Entry<JsonObject, ComparatorAction> r : result.getComparedOutput().entrySet()) {
                 if (r.getValue() == ComparatorAction.ADD) {
-                    this.add(gson.fromJson(r.getKey(), (Type) E));
+                    JsonObject value = r.getKey();
+                    JsonElement keyValue = value.get(key);
+                    this.put(gson.fromJson(keyValue, (Type) K), gson.fromJson(value, (Type) V));
                 }
 
                 if (r.getValue() == ComparatorAction.REMOVE) {
-                    JsonObject object = r.getKey();
-                    this.removeIf(E -> gson.fromJson(gson.toJson(E), JsonObject.class)
-                            .get(result.getKey()).equals(object.get(result.getKey())));
+                    JsonObject value = r.getKey();
+                    K keyObject = gson.fromJson(value.get(key), (Type) K);
+                    this.remove(keyObject);
                 }
 
                 if (r.getValue() == ComparatorAction.UPDATE) {
-                    JsonObject object = r.getKey();
-                    JsonObject updateObject = null;
-                    int val = -1;
-                    for (int i = 0; i < this.size(); i++) {
-                        JsonObject temp = JsonUtils.parseString(new Gson().toJson(get(i))).getAsJsonObject();
-                        if (temp.get(result.getKey()).equals(object.get(result.getKey()))) {
-                            updateObject = temp;
-                            val = i;
-                            break;
-                        }
-                    }
-
-                    if (updateObject != null) {
-                        for (String updateKey : JsonUtils.keySet(object)) {
-
-                            updateObject.remove(updateKey);
-                            updateObject.add(updateKey, object.get(updateKey));
-                        }
-
-
-                        remove(val);
-                        add(new Gson().fromJson(updateObject, (Type) E));
-                    }
+                    JsonObject value = r.getKey();
+                    JsonElement keyValue = value.get(key);
+                    this.put(gson.fromJson(keyValue, (Type) K), gson.fromJson(value, (Type) V));
                 }
-            }
-
-            // Duplicate check
-            if (key != null) {
-                Map<JsonElement, JsonObject> keyedDuplicate = new HashMap<>();
-                for (JsonElement o : result.getRawOutput()) {
-                    JsonObject object = o.getAsJsonObject();
-                    keyedDuplicate.put(object.get(key), object);
-                }
-                List<E> removeDuplicates = new ArrayList<>();
-                for (E e : this) {
-                    JsonObject object = gson.toJsonTree(e).getAsJsonObject();
-                    JsonElement objectKey = object.get(key);
-                    if (objectKey == null) {
-                        continue;
-                    }
-                    JsonObject correct = keyedDuplicate.get(objectKey);
-                    if (correct == null) {
-                        continue;
-                    }
-                    // Re-serialize to check custom rules
-                    object = gson.toJsonTree(gson.fromJson(object, (Type) E)).getAsJsonObject();
-                    correct = gson.toJsonTree(gson.fromJson(correct, (Type) E)).getAsJsonObject();
-                    for (String elementKey : JsonUtils.keySet(correct)) {
-                        if (object.get(elementKey) == null || !object.get(elementKey).equals(correct.get(elementKey))) {
-                            removeDuplicates.add(e);
-                            break;
-                        }
-                    }
-                }
-                removeIf(removeDuplicates::contains);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -296,9 +251,14 @@ public class StorageList<E> extends ArrayList<E> implements Storage {
 
     private JsonArray getSaveData() {
         JsonArray array = new JsonArray();
-        for (E o : this) {
-            array.add(gson.toJsonTree(o));
+        for(Entry<K, V> e : this.entrySet()) {
+            JsonObject value = gson.toJsonTree(e.getValue()).getAsJsonObject();
+            if(!value.has(key)) {
+                value.add(key, gson.toJsonTree(e.getKey()));
+            }
+            array.add(value);
         }
         return array;
     }
+
 }
