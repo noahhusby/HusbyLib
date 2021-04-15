@@ -27,6 +27,7 @@ public class StorageUtil {
 
     public static final Gson gson = new GsonBuilder()
             .serializeNulls()
+            .setLenient()
             .registerTypeAdapter(Double.class, (JsonSerializer<Double>) (src, typeOfSrc, context) -> {
                 if(src == src.intValue()) {
                     return new JsonPrimitive(src.intValue());
