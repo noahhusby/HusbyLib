@@ -8,7 +8,9 @@ import com.google.gson.JsonObject;
 import com.noahhusby.lib.data.storage.handlers.StorageHandler;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class ValueComparator implements Comparator{
     private String key;
@@ -28,20 +30,20 @@ public class ValueComparator implements Comparator{
         if(lastSave == null) {
             // Since the parent list has never been saved before, we will all of the current keys against the stored data and add what is necessary.
             for(Map.Entry<JsonElement, JsonObject> e : keyedSave.entrySet()) {
-                if(!keyedLoad.containsKey(e.getKey())) {
+                if(!containsKey(e.getKey(), keyedLoad.keySet())) {
                     compared.put(e.getValue(), ComparatorAction.ADD);
                 }
             }
         } else {
             MapDifference<JsonElement, JsonObject> savedDifference = Maps.difference(lastSave, keyedSave);
             for(Map.Entry<JsonElement, JsonObject> e : savedDifference.entriesOnlyOnLeft().entrySet()) {
-                if(keyedLoad.containsKey(e.getKey())) {
+                if(containsKey(e.getKey(), keyedLoad.keySet())) {
                     compared.put(e.getValue(), ComparatorAction.REMOVE);
                 }
             }
 
             for(Map.Entry<JsonElement, JsonObject> e : savedDifference.entriesOnlyOnRight().entrySet()) {
-                if(!keyedLoad.containsKey(e.getKey())) {
+                if(!containsKey(e.getKey(), keyedLoad.keySet())) {
                     compared.put(e.getValue(), ComparatorAction.ADD);
                 }
             }
@@ -64,20 +66,20 @@ public class ValueComparator implements Comparator{
         if(lastLoad == null) {
             // Since the parent list has never been saved before, we will all of the current keys against the stored data and add what is necessary.
             for(Map.Entry<JsonElement, JsonObject> e : keyedLoad.entrySet()) {
-                if(!keyedSave.containsKey(e.getKey())) {
+                if(!containsKey(e.getKey(), keyedSave.keySet())) {
                     compared.put(e.getValue(), ComparatorAction.ADD);
                 }
             }
         } else {
             MapDifference<JsonElement, JsonObject> loadedDifference = Maps.difference(lastLoad, keyedLoad);
             for(Map.Entry<JsonElement, JsonObject> e : loadedDifference.entriesOnlyOnLeft().entrySet()) {
-                if(keyedSave.containsKey(e.getKey())) {
+                if(containsKey(e.getKey(), keyedSave.keySet())) {
                     compared.put(e.getValue(), ComparatorAction.REMOVE);
                 }
             }
 
             for(Map.Entry<JsonElement, JsonObject> e : loadedDifference.entriesOnlyOnRight().entrySet()) {
-                if(!keyedSave.containsKey(e.getKey())) {
+                if(!containsKey(e.getKey(), keyedSave.keySet())) {
                     compared.put(e.getValue(), ComparatorAction.ADD);
                 }
             }
@@ -99,5 +101,14 @@ public class ValueComparator implements Comparator{
             temp.put(object.get(key), object);
         }
         return temp;
+    }
+
+    protected boolean containsKey(JsonElement key, Set<JsonElement> elements) {
+        for(JsonElement e : elements) {
+            if(key.equals(e)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
