@@ -190,12 +190,12 @@ public class SQLStorageHandler implements StorageHandler {
 
         if (!repaired) {
             try {
-                Connection con = getDatabase().getConnection();
-                if(con == null) {
-                    return;
-                }
 
                 if (structure.isRepair()) {
+                    Connection con = getDatabase().getConnection();
+                    if(con == null) {
+                        return;
+                    }
                     DatabaseMetaData dbm = con.getMetaData();
                     database.execute(new Custom("SET SQL_SAFE_UPDATES = 0;"));
 
@@ -226,8 +226,8 @@ public class SQLStorageHandler implements StorageHandler {
                             }
                         }
                     }
+                    con.close();
                 }
-                con.close();
             } catch (Exception e) {
                 e.printStackTrace();
             }
