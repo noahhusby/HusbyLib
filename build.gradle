@@ -1,6 +1,14 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:5.2.0'
+    }
+}
+
 plugins {
     id 'java'
-    id 'com.github.johnrengelman.shadow' version '4.0.4'
 }
 
 group 'com.noahhusby'
@@ -12,6 +20,7 @@ repositories {
 
 allprojects {
     apply plugin: "java"
+    apply plugin: 'com.github.johnrengelman.shadow'
 
     ext {
         husbylibVersion = "0.0.1-ALPHA";
