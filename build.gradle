@@ -23,7 +23,7 @@ allprojects {
     apply plugin: 'com.github.johnrengelman.shadow'
 
     ext {
-        husbylibVersion = "0.0.1-ALPHA";
+        husbylibVersion = "0.1";
         guavaVersion = "30.1-jre"
     }
 
@@ -36,6 +36,16 @@ allprojects {
 
     repositories {
         mavenCentral()
+    }
+
+    shadowJar{
+        archiveFileName = "HusbyLib-${baseName}-${version}.jar"
+    }
+
+    jar {
+        enabled = false
+        archiveName 'HusbyLib-${baseName}-${version}.jar'
+        dependsOn(shadowJar { classifier = null })
     }
 }
 
