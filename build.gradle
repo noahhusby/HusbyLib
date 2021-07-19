@@ -30,29 +30,20 @@ allprojects {
     group "com.noahhusby"
     version "$husbylibVersion"
 
-    tasks.withType(JavaCompile) {
-        options.encoding = "UTF-8"
-    }
-
     repositories {
         mavenCentral()
+    }
+
+    task sourcesJar(type: Jar, dependsOn: classes) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
     }
 
     shadowJar{
         archiveFileName = "HusbyLib-${baseName}-${version}.jar"
     }
 
-    jar {
-        enabled = false
-        archiveName 'HusbyLib-${baseName}-${version}.jar'
-        dependsOn(shadowJar { classifier = null })
-    }
-}
-
-dependencies {
-    for (Project prj : project.allprojects) {
-        if (!"HusbyLib".equalsIgnoreCase(prj.name) && prj.parent.name.equalsIgnoreCase("HusbyLib")) {
-            compile project(":" + prj.name)
-        }
+    artifacts {
+        archives shadowJar
     }
 }
