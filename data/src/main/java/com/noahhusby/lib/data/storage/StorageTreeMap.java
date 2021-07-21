@@ -135,11 +135,15 @@ public class StorageTreeMap<K, V> extends TreeMap<K, V> implements Storage {
 
     @Override
     public void save() {
-        JsonArray array = getSaveData();
-        for (Map.Entry<StorageHandler, Comparator> e : storageHandlers.entrySet()) {
-            e.getKey().save(e.getValue().save(array, e.getKey()));
+        try {
+            JsonArray array = getSaveData();
+            for (Map.Entry<StorageHandler, Comparator> e : storageHandlers.entrySet()) {
+                e.getKey().save(e.getValue().save(array, e.getKey()));
+            }
+            saveEvents.forEach(Runnable::run);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        saveEvents.forEach(Runnable::run);
     }
 
     @Override
