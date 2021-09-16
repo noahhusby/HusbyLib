@@ -41,6 +41,8 @@ public class JsonConfigurationProvider extends ConfigurationProvider {
         }
     }
 
+
+
     @Override
     @SneakyThrows
     public void update(Map<String, Property> properties) {
@@ -68,8 +70,10 @@ public class JsonConfigurationProvider extends ConfigurationProvider {
             }
         }
         if(changedOutput) {
-            @Cleanup FileWriter writer = new FileWriter(getSource().getFile());
+            FileWriter writer = new FileWriter(getSource().getFile());
             HusbyUtil.GSON.toJson(output, writer);
+            writer.close();
+            load();
         }
     }
 }

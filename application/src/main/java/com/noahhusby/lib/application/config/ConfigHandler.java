@@ -54,7 +54,7 @@ public final class ConfigHandler {
             Config.Comment commentAnnotation = field.getAnnotation(Config.Comment.class);
             String name = nameAnnotation == null ? field.getName() : nameAnnotation.value();
             String[] comment = commentAnnotation == null ? null : commentAnnotation.value();
-            properties.put(name, new Property(name, comment, field.get(clazz), field.getType()));
+            properties.put(name, new Property(name, comment, field.get(clazz), field.getType(), field));
         }
         return properties;
     }
