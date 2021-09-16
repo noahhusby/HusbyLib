@@ -1,0 +1,4 @@
+dependencies {
+    implementation project(":common")
+    compileOnly "com.google.code.gson:gson:$gsonVersion"
+}

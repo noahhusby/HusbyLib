@@ -11,9 +11,6 @@ plugins {
     id 'java'
 }
 
-group 'com.noahhusby'
-version '1.0'
-
 repositories {
     mavenCentral()
 }
@@ -23,15 +20,34 @@ allprojects {
     apply plugin: 'com.github.johnrengelman.shadow'
 
     ext {
-        husbylibVersion = "0.1";
+        husbylibVersion = "0.1." + ('git rev-list --count HEAD'.execute().text.trim())
+        gsonVersion = "2.8.0"
         guavaVersion = "30.1-jre"
+        mysqlVersion = "8.0.22"
+        hikariVersion = "4.0.3"
+        lombokVersion = "1.18.18"
     }
 
     group "com.noahhusby"
     version "$husbylibVersion"
 
+    tasks.withType(JavaCompile) {
+        options.encoding = "UTF-8"
+    }
+
     repositories {
         mavenCentral()
+    }
+
+    dependencies {
+        if (!("common".equalsIgnoreCase(project.name))) {
+            implementation project(":common")
+        }
+
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
+        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+        testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
     }
 
     task sourcesJar(type: Jar, dependsOn: classes) {

@@ -344,3 +344,6 @@ Sledgehammer [Bungeecord]\.idea/sonarlint
 \data/src/main/java/com/noahhusby/lib/data/test/
 /data/src/main/java/com/noahhusby/lib/data/test/
 /data/src/main/java/com/noahhusby/lib/data/test/
+!/test.json
+/application/src/main/java/com/noahhusby/lib/application/test/
+/.idea/
