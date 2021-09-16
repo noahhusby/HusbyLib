@@ -38,8 +38,8 @@ allprojects {
             if (System.getenv("MAVEN_USERNAME") != null && System.getenv("MAVEN_PASSWORD")) {
                 maven {
                     credentials {
-                        username = "$MAVEN_USERNAME"
-                        password = "$MAVEN_PASSWORD"
+                        username = System.getenv("MAVEN_USERNAME")
+                        password = System.getenv("MAVEN_PASSWORD")
                     }
                     name = "HusbyLib"
                     url = "https://maven.noahhusby.com/releases"
