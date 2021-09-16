@@ -1,15 +1,6 @@
-plugins {
-    id 'java'
-    id 'com.github.johnrengelman.shadow' version '6.1.0'
-}
-
-repositories {
-    mavenCentral()
-}
-
 allprojects {
     apply plugin: "java"
-    apply plugin: 'com.github.johnrengelman.shadow'
+    apply plugin: "maven-publish"
 
     ext {
         husbylibVersion = "0.1." + ('git rev-list --count HEAD'.execute().text.trim())
@@ -20,7 +11,7 @@ allprojects {
         lombokVersion = "1.18.20"
     }
 
-    group "com.noahhusby"
+    group "com.noahhusby.lib"
     version "$husbylibVersion"
 
     tasks.withType(JavaCompile) {
@@ -42,16 +33,36 @@ allprojects {
         testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
     }
 
-    task sourcesJar(type: Jar, dependsOn: classes) {
-        classifier = 'sources'
-        from sourceSets.main.allSource
-    }
+    publishing {
+        repositories {
+            if (System.getenv("MAVEN_USERNAME") != null && System.getenv("MAVEN_PASSWORD")) {
+                maven {
+                    credentials {
+                        username = "$MAVEN_USERNAME"
+                        password = "$MAVEN_PASSWORD"
+                    }
+                    name = "HusbyLib"
+                    url = "https://maven.noahhusby.com/releases"
+                }
+            }
+        }
 
-    shadowJar{
-        archiveFileName = "HusbyLib-${baseName}-${version}.jar"
-    }
+        publications {
+            maven(MavenPublication) {
+                groupId = "com.noahhusby.lib"
+                artifactId = "HusbyLib".equalsIgnoreCase(project.name) ? "all" : project.name
+                version = project.version
 
-    artifacts {
-        archives shadowJar
+                from components.java
+            }
+        }
+    }
+}
+
+dependencies {
+    for (Project prj : project.allprojects) {
+        if (!"HusbyLib".equalsIgnoreCase(prj.name) && prj.parent.name.equalsIgnoreCase("HusbyLib")) {
+            implementation project(":" + prj.name)
+        }
     }
 }
