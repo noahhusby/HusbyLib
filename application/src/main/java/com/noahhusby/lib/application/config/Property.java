@@ -26,13 +26,29 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 
 /**
+ * A class representing a specific property in a config file
+ *
  * @author Noah Husby
  */
 @Value
 public class Property {
+    /**
+     * Name of field, or other name if specified
+     */
     String name;
+
+    /**
+     * Comment of property
+     */
     String[] comment;
+
+    /**
+     * Default value specified by config file
+     */
     Object value;
-    Type type;
+
+    /**
+     * Field of property
+     */
     Field field;
 }

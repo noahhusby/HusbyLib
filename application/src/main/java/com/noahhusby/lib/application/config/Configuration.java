@@ -76,9 +76,9 @@ public class Configuration {
         Map<String, Property> properties = getProperties(clazz);
         provider.update(getProperties(clazz));
         for (Property property : properties.values()) {
-            Type type = property.getType();
-            Object object = HusbyUtil.GSON.fromJson(HusbyUtil.GSON.toJson(provider.getEntries().get(property.getName())), type);
             Field field = property.getField();
+            Type type = field.getType();
+            Object object = HusbyUtil.GSON.fromJson(HusbyUtil.GSON.toJson(provider.getEntries().get(property.getName())), type);
             field.setAccessible(true);
             field.set(clazz.newInstance(), object);
         }
@@ -211,7 +211,7 @@ public class Configuration {
             Config.Comment commentAnnotation = field.getAnnotation(Config.Comment.class);
             String name = nameAnnotation == null ? field.getName() : nameAnnotation.value();
             String[] comment = commentAnnotation == null ? null : commentAnnotation.value();
-            properties.put(name, new Property(name, comment, field.get(clazz), field.getType(), field));
+            properties.put(name, new Property(name, comment, field.get(clazz), field));
         }
         return properties;
     }
