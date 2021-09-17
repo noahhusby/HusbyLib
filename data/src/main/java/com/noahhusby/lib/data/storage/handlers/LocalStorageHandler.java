@@ -75,7 +75,7 @@ public class LocalStorageHandler implements StorageHandler {
     }
 
     @Override
-    public void destroy() {
+    public void close() {
 
     }
 }

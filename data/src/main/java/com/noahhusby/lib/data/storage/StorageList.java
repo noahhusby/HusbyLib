@@ -11,6 +11,7 @@ import com.noahhusby.lib.data.storage.compare.CompareResult;
 import com.noahhusby.lib.data.storage.compare.CutComparator;
 import com.noahhusby.lib.data.storage.compare.ValueComparator;
 import com.noahhusby.lib.data.storage.handlers.StorageHandler;
+import lombok.SneakyThrows;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -275,8 +276,9 @@ public class StorageList<E> extends ArrayList<E> implements Storage {
         saveEvents.add(runnable);
     }
 
+    @SneakyThrows
     @Override
-    public void destroy() {
+    public void close() {
         if (autoLoad != null) {
             autoLoad.shutdownNow();
             autoLoad = null;
@@ -286,19 +288,13 @@ public class StorageList<E> extends ArrayList<E> implements Storage {
             autoSave = null;
         }
         for (StorageHandler handler : storageHandlers.keySet()) {
-            handler.destroy();
+            handler.close();
         }
         storageHandlers.clear();
     }
 
     public void setGson(Gson gson) {
         this.gson = gson;
-    }
-
-    @Override
-    protected void finalize() throws Throwable {
-        destroy();
-        super.finalize();
     }
 
     private JsonArray getSaveData() {

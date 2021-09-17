@@ -233,7 +233,7 @@ public class SQLStorageHandler implements StorageHandler {
     }
 
     @Override
-    public void destroy() {
+    public void close() {
         executor.shutdownNow();
         executor = null;
         try {
