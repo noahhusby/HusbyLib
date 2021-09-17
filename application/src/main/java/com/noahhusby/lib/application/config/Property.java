@@ -23,7 +23,6 @@ package com.noahhusby.lib.application.config;
 import lombok.Value;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Type;
 
 /**
  * A class representing a specific property in a config file

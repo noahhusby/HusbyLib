@@ -56,14 +56,38 @@ public class Configuration {
      * Gets a config class object from the config file.
      *
      * @param clazz Config class.
-     * @param <T> Config class type.
+     * @param <T>   Config class type.
      * @return T class
+     * @deprecated As of 0.1.60, replaced by  {@link #sync(Class)}
      */
     @SneakyThrows
     public <T> T bind(Class<T> clazz) {
-        provider.update(getProperties(clazz));
-        JsonElement asElement = HusbyUtil.GSON.toJsonTree(provider.getEntries());
-        return HusbyUtil.GSON.fromJson(asElement, (Type) clazz);
+        provider.load();
+        Map<String, Object> members = new HashMap<>();
+        for (Map.Entry<?, ?> entry : getProvider().getEntries().entrySet()) {
+            members.put((String) entry.getKey(), entry.getValue());
+        }
+
+        Map<String, Field> fields = new HashMap<>();
+        for (Field field : clazz.getDeclaredFields()) {
+            if (field.isAnnotationPresent(Config.Ignore.class)) {
+                continue;
+            }
+            Config.Name nameAnnotation = field.getAnnotation(Config.Name.class);
+            String name = nameAnnotation == null ? field.getName() : nameAnnotation.value();
+            field.setAccessible(true);
+            fields.put(name, field);
+        }
+
+        T instance = clazz.newInstance();
+        for (Map.Entry<String, Field> entry : fields.entrySet()) {
+            Field field = entry.getValue();
+            JsonElement jsonElement = HusbyUtil.GSON.toJsonTree(members.get(entry.getKey()));
+            Object value = HusbyUtil.GSON.fromJson(jsonElement, field.getType());
+            field.setAccessible(true);
+            field.set(instance, value);
+        }
+        return instance;
     }
 
     /**
@@ -170,7 +194,7 @@ public class Configuration {
     /**
      * Create a configuration instance from a class with the {@link Config} annotation.
      *
-     * @param clazz Class with a {@link Config} annotation.
+     * @param clazz     Class with a {@link Config} annotation.
      * @param directory A custom directory for the file.
      * @return {@link Configuration} instance.
      * @throws ClassNotConfigException if the class does not have the {@link Config} annotation.
@@ -203,7 +227,7 @@ public class Configuration {
      */
     public static Map<String, Property> getProperties(Class<?> clazz) throws IllegalAccessException {
         Map<String, Property> properties = new HashMap<>();
-        for (Field field : clazz.getFields()) {
+        for (Field field : clazz.getDeclaredFields()) {
             if (field.isAnnotationPresent(Config.Ignore.class)) {
                 continue;
             }
@@ -211,6 +235,7 @@ public class Configuration {
             Config.Comment commentAnnotation = field.getAnnotation(Config.Comment.class);
             String name = nameAnnotation == null ? field.getName() : nameAnnotation.value();
             String[] comment = commentAnnotation == null ? null : commentAnnotation.value();
+            field.setAccessible(true);
             properties.put(name, new Property(name, comment, field.get(clazz), field));
         }
         return properties;
