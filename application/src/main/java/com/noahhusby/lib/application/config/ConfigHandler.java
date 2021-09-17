@@ -7,12 +7,9 @@ import com.noahhusby.lib.application.config.source.FileConfigurationSource;
 import lombok.NonNull;
 
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -26,7 +23,7 @@ public final class ConfigHandler {
     }
 
     public static Configuration of(@NonNull Class<?> clazz, @NonNull File directory) throws ClassNotConfigException {
-        if(!clazz.isAnnotationPresent(Config.class)) {
+        if (!clazz.isAnnotationPresent(Config.class)) {
             throw new ClassNotConfigException();
         }
 
@@ -46,8 +43,8 @@ public final class ConfigHandler {
 
     public static Map<String, Property> getProperties(Class<?> clazz) throws IllegalAccessException {
         Map<String, Property> properties = new HashMap<>();
-        for(Field field : clazz.getFields()) {
-            if(field.isAnnotationPresent(Config.Ignore.class)) {
+        for (Field field : clazz.getFields()) {
+            if (field.isAnnotationPresent(Config.Ignore.class)) {
                 continue;
             }
             Config.Name nameAnnotation = field.getAnnotation(Config.Name.class);

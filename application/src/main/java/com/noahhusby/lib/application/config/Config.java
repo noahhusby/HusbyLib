@@ -40,28 +40,25 @@ public @interface Config {
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.FIELD)
-    @interface Comment
-    {
+    @interface Comment {
         String[] value();
     }
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.FIELD)
-    @interface Ignore
-    {}
+    @interface Ignore {}
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.FIELD)
-    @interface RangeInt
-    {
+    @interface RangeInt {
         int min() default Integer.MIN_VALUE;
+
         int max() default Integer.MAX_VALUE;
     }
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.FIELD)
-    @interface Name
-    {
+    @interface Name {
         String value();
     }
 }

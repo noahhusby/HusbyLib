@@ -1,7 +1,5 @@
 package com.noahhusby.lib.data.storage.handlers;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.noahhusby.lib.data.JsonUtils;
@@ -25,7 +23,6 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -91,8 +88,7 @@ public class SQLStorageHandler implements StorageHandler {
                 if (r.getValue() == ComparatorAction.ADD) {
                     List<String> keys = new ArrayList<>();
                     List<String> objects = new ArrayList<>();
-                    for (Object k : JsonUtils.keySet(object)) {
-                        String key = (String) k;
+                    for (String key : JsonUtils.keySet(object)) {
                         if (!structure.getColumnNames().contains(key)) {
                             continue;
                         }
@@ -134,7 +130,7 @@ public class SQLStorageHandler implements StorageHandler {
                         }
                         if (object.get(key).isJsonObject() || object.get(key).isJsonArray()) {
                             update.add(key, StorageUtil.gson.toJson(object.get(key)));
-                        } else if(object.get(key).isJsonNull()) {
+                        } else if (object.get(key).isJsonNull()) {
                             update.add(key, "");
                         } else {
                             update.add(key, object.get(key).getAsString());
@@ -193,7 +189,7 @@ public class SQLStorageHandler implements StorageHandler {
 
                 if (structure.isRepair()) {
                     Connection con = getDatabase().getConnection();
-                    if(con == null) {
+                    if (con == null) {
                         return;
                     }
                     DatabaseMetaData dbm = con.getMetaData();
@@ -206,7 +202,7 @@ public class SQLStorageHandler implements StorageHandler {
                             StructureElement s = structure.getElements().get(i);
                             query.append(", ").append(s.getColumn()).append(" ").append(s.getType().getQuery());
                         }
-                        getDatabase().execute(new Custom(String.format("CREATE TABLE %s (%s);", table, query.toString())));
+                        getDatabase().execute(new Custom(String.format("CREATE TABLE %s (%s);", table, query)));
                     } else {
                         ResultSetMetaData metaData = con.createStatement().executeQuery(String.format("SELECT * FROM %s", table)).getMetaData();
                         List<String> columnNames = new ArrayList<>();
@@ -243,6 +239,7 @@ public class SQLStorageHandler implements StorageHandler {
         try {
             database.getConnection().close();
             database.close();
-        } catch (Exception ignored) { }
+        } catch (Exception ignored) {
+        }
     }
 }

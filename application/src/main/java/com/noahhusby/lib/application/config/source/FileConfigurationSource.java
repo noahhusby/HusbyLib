@@ -18,14 +18,14 @@ public class FileConfigurationSource implements ConfigurationSource {
     @Override
     public boolean init() {
         try {
-            if(file == null) {
+            if (file == null) {
                 return false;
             }
-            if(file.getParentFile() != null) {
+            if (file.getParentFile() != null) {
                 file.getParentFile().mkdirs();
             }
-            if(!file.exists()) {
-                if(!file.createNewFile()) {
+            if (!file.exists()) {
+                if (!file.createNewFile()) {
                     return false;
                 }
             }

@@ -2,7 +2,6 @@ package com.noahhusby.lib.data.sql;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
-import com.mysql.cj.jdbc.MysqlDataSource;
 import com.noahhusby.lib.data.JsonUtils;
 import com.noahhusby.lib.data.sql.actions.Query;
 import com.noahhusby.lib.data.sql.actions.Result;
@@ -59,7 +58,7 @@ public class MySQL extends SQLDatabase {
     @Override
     public boolean execute(Query query) {
         Connection con = getConnection();
-        if(con == null) {
+        if (con == null) {
             return false;
         }
         Statement stmt = null;
@@ -91,7 +90,7 @@ public class MySQL extends SQLDatabase {
     @Override
     public Result select(Select select) {
         Connection con = getConnection();
-        if(con == null) {
+        if (con == null) {
             return new Result();
         }
         PreparedStatement stmt;

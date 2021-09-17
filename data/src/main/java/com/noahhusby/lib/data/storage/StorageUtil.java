@@ -2,16 +2,10 @@ package com.noahhusby.lib.data.storage;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
-import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import lombok.experimental.UtilityClass;
 
-import java.lang.reflect.Type;
 import java.util.Objects;
 
 /**
@@ -29,11 +23,11 @@ public class StorageUtil {
             .serializeNulls()
             .setLenient()
             .registerTypeAdapter(Double.class, (JsonSerializer<Double>) (src, typeOfSrc, context) -> {
-                if(src == src.intValue()) {
+                if (src == src.intValue()) {
                     return new JsonPrimitive(src.intValue());
-                } else if(src == src.longValue()) {
+                } else if (src == src.longValue()) {
                     return new JsonPrimitive(src.longValue());
-                } else if(src == src.floatValue()) {
+                } else if (src == src.floatValue()) {
                     return new JsonPrimitive(src.floatValue());
                 }
                 return new JsonPrimitive(src);

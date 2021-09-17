@@ -3,10 +3,8 @@ package com.noahhusby.lib.application.config.provider;
 import com.noahhusby.lib.application.config.Property;
 import com.noahhusby.lib.application.config.source.ConfigurationSource;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public abstract class ConfigurationProvider {

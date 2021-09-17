@@ -213,10 +213,13 @@ public class StorageTreeMap<K, V> extends TreeMap<K, V> implements Storage {
             }
         } catch (HandlerNotAvailableExcpetion e) {
             e.printStackTrace();
+            return;
         }
 
         JsonArray data = handler.load();
-        if(data == null) return;
+        if (data == null) {
+            return;
+        }
         for (StorageHandler s : storageHandlers.keySet()) {
             if (s != handler) {
                 s.save(storageHandlers.get(s).save(data, s));
@@ -236,15 +239,15 @@ public class StorageTreeMap<K, V> extends TreeMap<K, V> implements Storage {
 
     @Override
     public void destroy() {
-        if(autoLoad != null) {
+        if (autoLoad != null) {
             autoLoad.shutdownNow();
             autoLoad = null;
         }
-        if(autoSave != null) {
+        if (autoSave != null) {
             autoSave.shutdownNow();
             autoSave = null;
         }
-        for(StorageHandler handler : storageHandlers.keySet()) {
+        for (StorageHandler handler : storageHandlers.keySet()) {
             handler.destroy();
         }
         storageHandlers.clear();
@@ -262,9 +265,9 @@ public class StorageTreeMap<K, V> extends TreeMap<K, V> implements Storage {
 
     private JsonArray getSaveData() {
         JsonArray array = new JsonArray();
-        for(Map.Entry<K, V> e : this.entrySet()) {
+        for (Map.Entry<K, V> e : this.entrySet()) {
             JsonObject value = gson.toJsonTree(e.getValue()).getAsJsonObject();
-            if(!value.has(key)) {
+            if (!value.has(key)) {
                 value.add(key, gson.toJsonTree(e.getKey()));
             }
             array.add(value);

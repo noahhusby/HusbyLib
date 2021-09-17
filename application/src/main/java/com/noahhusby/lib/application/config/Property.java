@@ -1,6 +1,5 @@
 package com.noahhusby.lib.application.config;
 
-import lombok.Data;
 import lombok.Value;
 
 import java.lang.reflect.Field;

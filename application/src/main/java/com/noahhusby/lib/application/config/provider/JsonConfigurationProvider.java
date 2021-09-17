@@ -17,7 +17,6 @@ import java.io.Reader;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -36,11 +35,10 @@ public class JsonConfigurationProvider extends ConfigurationProvider {
         File file = source.getFile();
         @Cleanup Reader reader = Files.newBufferedReader(file.toPath());
         entries = HusbyUtil.GSON.fromJson(reader, Map.class);
-        if(entries == null) {
+        if (entries == null) {
             entries = new HashMap<>();
         }
     }
-
 
 
     @Override
@@ -50,12 +48,12 @@ public class JsonConfigurationProvider extends ConfigurationProvider {
         JsonObject output = new JsonObject();
         boolean changedOutput = false;
         // Add all loaded entries
-        for(Map.Entry<?, ?> entry : entries.entrySet()) {
+        for (Map.Entry<?, ?> entry : entries.entrySet()) {
             output.add((String) entry.getKey(), HusbyUtil.GSON.toJsonTree(entry.getValue()));
         }
         // Add all missing entries
-        for(Map.Entry<String, Property> property : properties.entrySet()) {
-            if(!output.has(property.getKey())) {
+        for (Map.Entry<String, Property> property : properties.entrySet()) {
+            if (!output.has(property.getKey())) {
                 Object value = property.getValue().getValue();
                 JsonElement element = value == null ? JsonNull.INSTANCE : HusbyUtil.GSON.toJsonTree(value);
                 output.add(property.getKey(), element);
@@ -63,13 +61,13 @@ public class JsonConfigurationProvider extends ConfigurationProvider {
             }
         }
         // Remove all unnecessary entries
-        for(Map.Entry<String, JsonElement> entry : new ArrayList<>(output.entrySet())) {
-            if(!properties.containsKey(entry.getKey())) {
+        for (Map.Entry<String, JsonElement> entry : new ArrayList<>(output.entrySet())) {
+            if (!properties.containsKey(entry.getKey())) {
                 output.remove(entry.getKey());
                 changedOutput = true;
             }
         }
-        if(changedOutput) {
+        if (changedOutput) {
             FileWriter writer = new FileWriter(getSource().getFile());
             HusbyUtil.GSON.toJson(output, writer);
             writer.close();

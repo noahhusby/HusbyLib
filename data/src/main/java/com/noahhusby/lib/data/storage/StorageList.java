@@ -251,10 +251,13 @@ public class StorageList<E> extends ArrayList<E> implements Storage {
             }
         } catch (HandlerNotAvailableExcpetion e) {
             e.printStackTrace();
+            return;
         }
 
         JsonArray data = handler.load();
-        if(data == null) return;
+        if (data == null) {
+            return;
+        }
         for (StorageHandler s : storageHandlers.keySet()) {
             if (s != handler) {
                 s.save(storageHandlers.get(s).save(data, s));
@@ -274,15 +277,15 @@ public class StorageList<E> extends ArrayList<E> implements Storage {
 
     @Override
     public void destroy() {
-        if(autoLoad != null) {
+        if (autoLoad != null) {
             autoLoad.shutdownNow();
             autoLoad = null;
         }
-        if(autoSave != null) {
+        if (autoSave != null) {
             autoSave.shutdownNow();
             autoSave = null;
         }
-        for(StorageHandler handler : storageHandlers.keySet()) {
+        for (StorageHandler handler : storageHandlers.keySet()) {
             handler.destroy();
         }
         storageHandlers.clear();

@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.noahhusby.lib.data.JsonUtils;
 import com.noahhusby.lib.data.storage.compare.Comparator;
 import com.noahhusby.lib.data.storage.compare.ComparatorAction;
 import com.noahhusby.lib.data.storage.compare.CompareResult;
@@ -206,10 +205,13 @@ public class StorageHashMap<K, V> extends HashMap<K, V> implements Storage {
             }
         } catch (HandlerNotAvailableExcpetion e) {
             e.printStackTrace();
+            return;
         }
 
         JsonArray data = handler.load();
-        if(data == null) return;
+        if (data == null) {
+            return;
+        }
         for (StorageHandler s : storageHandlers.keySet()) {
             if (s != handler) {
                 s.save(storageHandlers.get(s).save(data, s));
@@ -229,15 +231,15 @@ public class StorageHashMap<K, V> extends HashMap<K, V> implements Storage {
 
     @Override
     public void destroy() {
-        if(autoLoad != null) {
+        if (autoLoad != null) {
             autoLoad.shutdownNow();
             autoLoad = null;
         }
-        if(autoSave != null) {
+        if (autoSave != null) {
             autoSave.shutdownNow();
             autoSave = null;
         }
-        for(StorageHandler handler : storageHandlers.keySet()) {
+        for (StorageHandler handler : storageHandlers.keySet()) {
             handler.destroy();
         }
         storageHandlers.clear();
@@ -255,9 +257,9 @@ public class StorageHashMap<K, V> extends HashMap<K, V> implements Storage {
 
     private JsonArray getSaveData() {
         JsonArray array = new JsonArray();
-        for(Entry<K, V> e : this.entrySet()) {
+        for (Entry<K, V> e : this.entrySet()) {
             JsonObject value = gson.toJsonTree(e.getValue()).getAsJsonObject();
-            if(!value.has(key)) {
+            if (!value.has(key)) {
                 value.add(key, gson.toJsonTree(e.getKey()));
             }
             array.add(value);
