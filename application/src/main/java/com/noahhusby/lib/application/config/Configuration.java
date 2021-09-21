@@ -181,6 +181,16 @@ public class Configuration {
     }
 
     /**
+     * Get the specified member as a long.
+     *
+     * @param key Key of member.
+     * @return the long correlating to the specified member.
+     */
+    public long getAsLong(String key) {
+        return (long) get(key);
+    }
+
+    /**
      * Create a configuration instance from a class with the {@link Config} annotation.
      *
      * @param clazz Class with a {@link Config} annotation.
