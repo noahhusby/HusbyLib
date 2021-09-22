@@ -20,11 +20,26 @@
 
 package com.noahhusby.lib.application.config.provider;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
+import com.google.gson.JsonObject;
 import com.noahhusby.lib.application.config.Property;
 import com.noahhusby.lib.application.config.source.ConfigurationSource;
+import com.noahhusby.lib.common.util.HusbyUtil;
 import lombok.Builder;
+import lombok.Cleanup;
 import lombok.NonNull;
+import lombok.SneakyThrows;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.Yaml;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.io.Reader;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -32,18 +47,59 @@ import java.util.Map;
  */
 public class YamlConfigurationProvider extends ConfigurationProvider {
 
+    private final Yaml yaml;
+
     @Builder(setterPrefix = "set")
     public YamlConfigurationProvider(@NonNull ConfigurationSource source) {
         super(source);
+        DumperOptions options = new DumperOptions();
+        options.setIndent(2);
+        options.setPrettyFlow(true);
+        options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+        yaml = new Yaml(options);
     }
 
     @Override
+    @SneakyThrows
     public void load() {
-
+        File file = source.getFile();
+        @Cleanup Reader reader = Files.newBufferedReader(file.toPath());
+        entries = yaml.load(reader);
+        if (entries == null) {
+            entries = new HashMap<>();
+        }
     }
 
     @Override
+    @SneakyThrows
     public void update(Map<String, Property> properties) {
-
+        load();
+        Map<String, Object> output = new HashMap<>();
+        boolean changedOutput = false;
+        // Add all loaded entries
+        for (Map.Entry<?, ?> entry : entries.entrySet()) {
+            output.put((String) entry.getKey(), entry.getValue());
+        }
+        // Add all missing entries
+        for (Map.Entry<String, Property> property : properties.entrySet()) {
+            if(!output.containsKey(property.getKey())) {
+                Object value = property.getValue().getValue();
+                output.put(property.getKey(), value);
+                changedOutput = true;
+            }
+        }
+        // Remove all unnecessary entries
+        for (Map.Entry<String, Object> entry : new ArrayList<>(output.entrySet())) {
+            if (!properties.containsKey(entry.getKey())) {
+                output.remove(entry.getKey());
+                changedOutput = true;
+            }
+        }
+        if (changedOutput) {
+            PrintWriter writer = new PrintWriter(getSource().getFile());
+            yaml.dump(output, writer);
+            writer.close();
+            load();
+        }
     }
 }

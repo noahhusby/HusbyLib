@@ -21,4 +21,5 @@
 dependencies {
     implementation project(":common")
     implementation "com.google.code.gson:gson:$gsonVersion"
+    implementation "org.yaml:snakeyaml:$snakeVersion"
 }
