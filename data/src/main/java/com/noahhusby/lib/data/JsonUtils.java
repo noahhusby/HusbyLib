@@ -112,7 +112,6 @@ public class JsonUtils {
     public static boolean isJsonValid(final JsonReader jsonReader) throws IOException {
         try {
             JsonToken token;
-            loop:
             while ((token = jsonReader.peek()) != JsonToken.END_DOCUMENT && token != null) {
                 switch (token) {
                     case BEGIN_ARRAY:
@@ -136,8 +135,6 @@ public class JsonUtils {
                     case NULL:
                         jsonReader.skipValue();
                         break;
-                    case END_DOCUMENT:
-                        break loop;
                     default:
                         throw new AssertionError(token);
                 }

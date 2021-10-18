@@ -26,6 +26,7 @@ import com.noahhusby.lib.data.JsonUtils;
 import com.noahhusby.lib.data.sql.MySQL;
 import com.noahhusby.lib.data.sql.SQLDatabase;
 import com.noahhusby.lib.data.sql.actions.Custom;
+import com.noahhusby.lib.data.sql.actions.DisableSafeUpdates;
 import com.noahhusby.lib.data.sql.actions.Insert;
 import com.noahhusby.lib.data.sql.actions.Result;
 import com.noahhusby.lib.data.sql.actions.Row;
@@ -194,7 +195,7 @@ public class SQLStorageHandler extends StorageHandler {
                         return;
                     }
                     DatabaseMetaData dbm = con.getMetaData();
-                    database.execute(new Custom("SET SQL_SAFE_UPDATES = 0;"));
+                    database.execute(new DisableSafeUpdates());
 
                     ResultSet tables = dbm.getTables(getDatabase().getCredentials().getDatabase(), null, table, null);
                     if (!tables.next()) {

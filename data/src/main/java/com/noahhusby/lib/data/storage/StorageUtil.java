@@ -34,7 +34,7 @@ import java.util.Objects;
 @UtilityClass
 public class StorageUtil {
 
-    protected static final Gson excludedGson = new GsonBuilder()
+    public static final Gson excludedGson = new GsonBuilder()
             .excludeFieldsWithoutExposeAnnotation()
             .serializeNulls()
             .create();
@@ -55,7 +55,7 @@ public class StorageUtil {
             .create();
 
 
-    protected static String getKeyAnnotation(Class<?> clazz) {
+    public static String getKeyAnnotation(Class<?> clazz) {
         if (Objects.isNull(clazz)) {
             return null;
         }
