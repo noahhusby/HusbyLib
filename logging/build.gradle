@@ -18,10 +18,5 @@
  *
  */
 
-rootProject.name = 'HusbyLib'
-
-include 'data'
-include 'application'
-include 'common'
-include 'logging'
-
+dependencies {
+}
