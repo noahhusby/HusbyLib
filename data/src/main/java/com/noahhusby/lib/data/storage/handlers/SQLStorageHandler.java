@@ -50,15 +50,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class SQLStorageHandler implements StorageHandler {
+public class SQLStorageHandler extends StorageHandler {
     private ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
     private ISQLDatabase database;
 
     private final String table;
     private final Structure structure;
-    private int priority = 0;
-
-    private Storage storage;
     private boolean repaired;
 
     public String filter = "";
@@ -81,11 +78,6 @@ public class SQLStorageHandler implements StorageHandler {
 
     public ISQLDatabase getDatabase() {
         return database;
-    }
-
-    @Override
-    public void init(Storage storage) {
-        this.storage = storage;
     }
 
     @Override
@@ -181,16 +173,6 @@ public class SQLStorageHandler implements StorageHandler {
         }
 
         return array;
-    }
-
-    @Override
-    public int getPriority() {
-        return priority;
-    }
-
-    @Override
-    public void setPriority(int priority) {
-        this.priority = priority;
     }
 
     @Override

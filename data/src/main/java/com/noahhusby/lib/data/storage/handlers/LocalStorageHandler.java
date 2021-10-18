@@ -30,11 +30,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
-public class LocalStorageHandler implements StorageHandler {
+public class LocalStorageHandler extends StorageHandler {
     private final File file;
-    private int priority = 0;
-
-    private Storage storage;
 
     public LocalStorageHandler(File file) {
         this.file = file;
@@ -49,11 +46,6 @@ public class LocalStorageHandler implements StorageHandler {
                 e.printStackTrace();
             }
         }
-    }
-
-    @Override
-    public void init(Storage storage) {
-        this.storage = storage;
     }
 
     @Override
@@ -77,16 +69,6 @@ public class LocalStorageHandler implements StorageHandler {
         }
 
         return new JsonArray();
-    }
-
-    @Override
-    public int getPriority() {
-        return priority;
-    }
-
-    @Override
-    public void setPriority(int priority) {
-        this.priority = priority;
     }
 
     @Override
