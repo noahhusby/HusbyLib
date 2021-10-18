@@ -20,11 +20,13 @@
 
 package com.noahhusby.lib.data.sql.structure;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
  * @author Noah Husby
  */
+@AllArgsConstructor
 public enum Type {
     INT("INT"),
 
@@ -34,8 +36,4 @@ public enum Type {
 
     @Getter
     private final String query;
-
-    Type(String query) {
-        this.query = query;
-    }
 }

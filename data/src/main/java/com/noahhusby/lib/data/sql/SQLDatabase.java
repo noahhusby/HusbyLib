@@ -20,24 +20,29 @@
 
 package com.noahhusby.lib.data.sql;
 
-public abstract class SQLDatabase implements ISQLDatabase {
-    private Credentials credentials;
+import com.noahhusby.lib.data.sql.actions.Query;
+import com.noahhusby.lib.data.sql.actions.Result;
+import com.noahhusby.lib.data.sql.actions.Select;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-    public SQLDatabase() {
-        credentials = new Credentials();
-    }
+import java.io.Closeable;
+import java.sql.Connection;
+import java.util.concurrent.CompletableFuture;
 
-    public SQLDatabase(Credentials credentials) {
-        setCredentials(credentials);
-    }
+@NoArgsConstructor
+@AllArgsConstructor
+public abstract class SQLDatabase implements Closeable {
+    @Setter @Getter
+    private Credentials credentials = new Credentials();
 
-    @Override
-    public void setCredentials(Credentials credentials) {
-        this.credentials = credentials;
-    }
+    public abstract Connection getConnection();
 
-    @Override
-    public Credentials getCredentials() {
-        return credentials;
-    }
+    public abstract boolean execute(Query query);
+
+    public abstract Result select(Select select);
+
+    public abstract CompletableFuture<Result> asyncSelect(Select select);
 }

@@ -70,9 +70,8 @@ public class MySQL extends SQLDatabase {
     }
 
     @Override
-    public boolean close() {
+    public void close() {
         ds.close();
-        return true;
     }
 
     @Override

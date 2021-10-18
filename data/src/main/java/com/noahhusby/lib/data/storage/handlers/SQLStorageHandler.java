@@ -23,8 +23,8 @@ package com.noahhusby.lib.data.storage.handlers;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.noahhusby.lib.data.JsonUtils;
-import com.noahhusby.lib.data.sql.ISQLDatabase;
 import com.noahhusby.lib.data.sql.MySQL;
+import com.noahhusby.lib.data.sql.SQLDatabase;
 import com.noahhusby.lib.data.sql.actions.Custom;
 import com.noahhusby.lib.data.sql.actions.Insert;
 import com.noahhusby.lib.data.sql.actions.Result;
@@ -34,7 +34,6 @@ import com.noahhusby.lib.data.sql.actions.Update;
 import com.noahhusby.lib.data.sql.actions.UpdateValue;
 import com.noahhusby.lib.data.sql.structure.Structure;
 import com.noahhusby.lib.data.sql.structure.StructureElement;
-import com.noahhusby.lib.data.storage.Storage;
 import com.noahhusby.lib.data.storage.StorageUtil;
 import com.noahhusby.lib.data.storage.compare.ComparatorAction;
 import com.noahhusby.lib.data.storage.compare.CompareResult;
@@ -52,7 +51,7 @@ import java.util.concurrent.TimeUnit;
 
 public class SQLStorageHandler extends StorageHandler {
     private ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
-    private ISQLDatabase database;
+    private SQLDatabase database;
 
     private final String table;
     private final Structure structure;
@@ -64,7 +63,7 @@ public class SQLStorageHandler extends StorageHandler {
         this(new MySQL(), table, structure);
     }
 
-    public SQLStorageHandler(ISQLDatabase database, String table, Structure structure) {
+    public SQLStorageHandler(SQLDatabase database, String table, Structure structure) {
         this.database = database;
         this.table = table;
         this.structure = structure;
@@ -72,11 +71,11 @@ public class SQLStorageHandler extends StorageHandler {
         executor.scheduleAtFixedRate(this::onLoop, 0, 5, TimeUnit.SECONDS);
     }
 
-    public void setDatabase(ISQLDatabase database) {
+    public void setDatabase(SQLDatabase database) {
         this.database = database;
     }
 
-    public ISQLDatabase getDatabase() {
+    public SQLDatabase getDatabase() {
         return database;
     }
 

@@ -54,7 +54,7 @@ public class Structure {
     }
 
     public static class StructureBuilder {
-        private List<StructureElement> elements = new ArrayList<>();
+        private final List<StructureElement> elements = new ArrayList<>();
         private boolean repair;
 
         StructureBuilder() {
