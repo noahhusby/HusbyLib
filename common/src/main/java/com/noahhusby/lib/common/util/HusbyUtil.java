@@ -29,9 +29,11 @@ import lombok.experimental.UtilityClass;
  */
 @UtilityClass
 public class HusbyUtil {
+    public final String VERSION;
     public final Gson GSON;
 
     static {
+        VERSION = HusbyUtil.class.getPackage().getImplementationVersion();
         GSON = new GsonBuilder()
                 .setPrettyPrinting()
                 .create();

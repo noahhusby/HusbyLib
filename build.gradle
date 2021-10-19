@@ -71,7 +71,7 @@ allprojects {
         publications {
             maven(MavenPublication) {
                 groupId = "com.noahhusby.lib"
-                artifactId = "HusbyLib".equalsIgnoreCase(project.name) ? "husbylib" : "husbylib-" + project.name
+                artifactId = "HusbyLib".equalsIgnoreCase(project.name) ? "all" : project.name
                 version = project.version
 
                 from components.java
