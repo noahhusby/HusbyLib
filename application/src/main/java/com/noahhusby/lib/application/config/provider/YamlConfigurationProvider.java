@@ -20,12 +20,8 @@
 
 package com.noahhusby.lib.application.config.provider;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonNull;
-import com.google.gson.JsonObject;
 import com.noahhusby.lib.application.config.Property;
 import com.noahhusby.lib.application.config.source.ConfigurationSource;
-import com.noahhusby.lib.common.util.HusbyUtil;
 import lombok.Builder;
 import lombok.Cleanup;
 import lombok.NonNull;
@@ -34,7 +30,6 @@ import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.nio.file.Files;
@@ -82,7 +77,7 @@ public class YamlConfigurationProvider extends ConfigurationProvider {
         }
         // Add all missing entries
         for (Map.Entry<String, Property> property : properties.entrySet()) {
-            if(!output.containsKey(property.getKey())) {
+            if (!output.containsKey(property.getKey())) {
                 Object value = property.getValue().getValue();
                 output.put(property.getKey(), value);
                 changedOutput = true;

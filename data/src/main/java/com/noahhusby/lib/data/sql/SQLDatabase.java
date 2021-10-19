@@ -35,7 +35,8 @@ import java.util.concurrent.CompletableFuture;
 @NoArgsConstructor
 @AllArgsConstructor
 public abstract class SQLDatabase implements Closeable {
-    @Setter @Getter
+    @Setter
+    @Getter
     private Credentials credentials = new Credentials();
 
     public abstract Connection getConnection();

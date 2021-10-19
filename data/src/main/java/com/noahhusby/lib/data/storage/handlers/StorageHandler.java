@@ -35,7 +35,8 @@ public abstract class StorageHandler implements Closeable {
 
     @Getter
     private Storage storage;
-    @Getter @Setter
+    @Getter
+    @Setter
     private int priority;
 
     public void init(Storage storage) {
