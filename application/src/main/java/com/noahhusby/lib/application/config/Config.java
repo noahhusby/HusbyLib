@@ -22,7 +22,7 @@ package com.noahhusby.lib.application.config;
 
 import com.noahhusby.lib.application.config.provider.ConfigurationProvider;
 import com.noahhusby.lib.application.config.provider.JsonConfigurationProvider;
-import com.noahhusby.lib.application.config.provider.VisualConfigurationProvider;
+import com.noahhusby.lib.application.config.provider.HoconConfigurationProvider;
 import com.noahhusby.lib.application.config.provider.YamlConfigurationProvider;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -52,7 +52,7 @@ public @interface Config {
     enum Type {
         JSON(".json", JsonConfigurationProvider.class),
         YAML(".yml", YamlConfigurationProvider.class),
-        VISUAL(".cfg", VisualConfigurationProvider.class);
+        HOCON(".cfg", HoconConfigurationProvider.class);
 
         private String extension;
         private Class<? extends ConfigurationProvider> provider;

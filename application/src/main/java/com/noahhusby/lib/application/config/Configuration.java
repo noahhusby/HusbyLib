@@ -236,8 +236,23 @@ public class Configuration {
      * @throws IllegalAccessException if a given property cannot be accessed
      */
     public static Map<String, Property> getProperties(Class<?> clazz) throws IllegalAccessException {
+        return getProperties(clazz, clazz.getDeclaredFields());
+    }
+
+    /**
+     * Get a map of properties from a config class.
+     *
+     * @param obj Object
+     * @return A map of properties
+     * @throws IllegalAccessException if a given property cannot be accessed
+     */
+    public static Map<String, Property> getProperties(Object obj) throws IllegalAccessException {
+        return getProperties(obj, obj.getClass().getDeclaredFields());
+    }
+
+    public static Map<String, Property> getProperties(Object obj, Field[] fields) throws IllegalAccessException {
         Map<String, Property> properties = new HashMap<>();
-        for (Field field : clazz.getDeclaredFields()) {
+        for (Field field : fields) {
             if (field.isAnnotationPresent(Config.Ignore.class)) {
                 continue;
             }
@@ -246,8 +261,9 @@ public class Configuration {
             String name = nameAnnotation == null ? field.getName() : nameAnnotation.value();
             String[] comment = commentAnnotation == null ? null : commentAnnotation.value();
             field.setAccessible(true);
-            properties.put(name, new Property(name, comment, field.get(clazz), field));
+            properties.put(name, new Property(name, comment, field.get(obj), field));
         }
         return properties;
     }
+
 }

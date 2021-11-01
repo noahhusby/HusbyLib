@@ -173,3 +173,4 @@ Sledgehammer [Bungeecord]\.idea/**/mongoSettings.xml
 !/test.json
 /application/src/main/java/com/noahhusby/lib/application/test/
 /test.yml
+/test.cfg
