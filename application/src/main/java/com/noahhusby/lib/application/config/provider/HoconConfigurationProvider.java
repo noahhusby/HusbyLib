@@ -116,7 +116,11 @@ public class HoconConfigurationProvider extends ConfigurationProvider {
                     }
                     writer.write(indent + "]\n");
                 } else {
-                    writer.write(indent + property.getKey() + " = " + property.getValue().getValue() + "\n\n");
+                    if(property.getValue().getValue() instanceof String) {
+                        writer.write(indent + property.getKey() + " = \"" + property.getValue().getValue() + "\"\n\n");
+                    } else {
+                        writer.write(indent + property.getKey() + " = " + property.getValue().getValue() + "\n\n");
+                    }
                 }
             }
         }
