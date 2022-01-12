@@ -116,7 +116,7 @@ public class HoconConfigurationProvider extends ConfigurationProvider {
                     }
                     writer.write(indent + "]\n");
                 } else {
-                    if(property.getValue().getValue() instanceof String) {
+                    if (property.getValue().getValue() instanceof String) {
                         writer.write(indent + property.getKey() + " = \"" + property.getValue().getValue() + "\"\n\n");
                     } else {
                         writer.write(indent + property.getKey() + " = " + property.getValue().getValue() + "\n\n");

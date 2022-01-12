@@ -21,8 +21,8 @@
 package com.noahhusby.lib.application.config;
 
 import com.noahhusby.lib.application.config.provider.ConfigurationProvider;
-import com.noahhusby.lib.application.config.provider.JsonConfigurationProvider;
 import com.noahhusby.lib.application.config.provider.HoconConfigurationProvider;
+import com.noahhusby.lib.application.config.provider.JsonConfigurationProvider;
 import com.noahhusby.lib.application.config.provider.YamlConfigurationProvider;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
