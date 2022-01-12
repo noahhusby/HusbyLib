@@ -51,7 +51,7 @@ public class MongoStorageHandler extends StorageHandler {
             for (Map.Entry<JsonObject, ComparatorAction> r : result.getComparedOutput().entrySet()) {
                 JsonObject object = r.getKey();
                 if (r.getValue() == ComparatorAction.REMOVE) {
-                    collection.deleteOne(new Document("_id", object.get(result.getKey()).getAsString()));
+                    collection.deleteOne(new Document("_id", object.get(result.getKey())));
                 }
 
                 if (r.getValue() == ComparatorAction.ADD) {
