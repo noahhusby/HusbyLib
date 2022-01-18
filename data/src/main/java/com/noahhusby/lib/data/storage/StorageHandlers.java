@@ -15,7 +15,7 @@ public class StorageHandlers<T> {
 
     private final ArrayList<StorageHandler<T>> handlers = new ArrayList<>();
 
-    public void registerHandler(StorageHandler<T> handler) {
+    public void register(StorageHandler<T> handler) {
         handler.init(storage);
         handlers.add(handler);
     }
@@ -24,11 +24,11 @@ public class StorageHandlers<T> {
         return handlers;
     }
 
-    public void unregisterHandler(StorageHandler<T> handler) {
+    public void unregister(StorageHandler<T> handler) {
         handlers.remove(handler);
     }
 
-    public void clearHandlers() {
+    public void clear() {
         handlers.clear();
     }
 }

@@ -9,7 +9,7 @@ import java.util.List;
  * @author Noah Husby
  */
 public class StorageEvents<T> {
-    public final List<EventListener<T>> listeners = new ArrayList<>();
+    protected final List<EventListener<T>> listeners = new ArrayList<>();
 
     public void register(EventListener<T> listener) {
         listeners.add(listener);
