@@ -57,8 +57,8 @@ public class LocalStorageHandler<T> extends StorageHandler<T> {
         public Collection<T> get() {
             List<T> objects = new ArrayList<>();
             try {
-                JsonArray array =  StorageUtil.gson.fromJson(new FileReader(file), JsonArray.class);
-                for(JsonElement element : array) {
+                JsonArray array = StorageUtil.gson.fromJson(new FileReader(file), JsonArray.class);
+                for (JsonElement element : array) {
                     objects.add(StorageUtil.gson.fromJson(element, storage.getClassType()));
                 }
             } catch (IOException e) {
@@ -98,10 +98,10 @@ public class LocalStorageHandler<T> extends StorageHandler<T> {
 
     @Override
     public void load() {
-        for(T obj : Lists.newArrayList(storage.actions().get())) {
+        for (T obj : Lists.newArrayList(storage.actions().get())) {
             storage.actions().remove(obj);
         }
-        for(T obj : actions.get()) {
+        for (T obj : actions.get()) {
             storage.actions().add(obj);
         }
     }

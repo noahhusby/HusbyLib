@@ -20,18 +20,14 @@
 
 package com.noahhusby.lib.data.storage.handlers;
 
-import com.google.gson.JsonArray;
 import com.noahhusby.lib.data.storage.Storage;
 import com.noahhusby.lib.data.storage.StorageActions;
 import com.noahhusby.lib.data.storage.compare.Comparator;
-import com.noahhusby.lib.data.storage.compare.CompareResult;
 import com.noahhusby.lib.data.storage.compare.ValueComparator;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Closeable;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author Noah Husby

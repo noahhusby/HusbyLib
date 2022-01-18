@@ -20,7 +20,6 @@
 
 package com.noahhusby.lib.data.storage.handlers;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.noahhusby.lib.data.JsonUtils;
 import com.noahhusby.lib.data.sql.MySQL;
@@ -37,28 +36,27 @@ import com.noahhusby.lib.data.sql.structure.Structure;
 import com.noahhusby.lib.data.sql.structure.StructureElement;
 import com.noahhusby.lib.data.storage.StorageActions;
 import com.noahhusby.lib.data.storage.StorageUtil;
-import com.noahhusby.lib.data.storage.compare.ComparatorAction;
-import com.noahhusby.lib.data.storage.compare.CompareResult;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public class SQLStorageHandler<T> extends StorageHandler<T> {
-    private ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+    @Getter
+    @Setter
     private SQLDatabase database;
 
     private final String table;
     private final Structure structure;
     private boolean repaired;
 
+    @Setter
     public String filter = "";
 
     public SQLStorageHandler(String table, Structure structure) {
@@ -69,128 +67,99 @@ public class SQLStorageHandler<T> extends StorageHandler<T> {
         this.database = database;
         this.table = table;
         this.structure = structure;
-        onLoop();
-        executor.scheduleAtFixedRate(this::onLoop, 0, 5, TimeUnit.SECONDS);
+        repair();
     }
 
-    public void setDatabase(SQLDatabase database) {
-        this.database = database;
-    }
-
-    public SQLDatabase getDatabase() {
-        return database;
-    }
-
-    /*
-    @Override
-    public void save(CompareResult result) {
-        if (!isAvailable()) {
-            return;
-        }
-        try {
-            if (result.isCleared()) {
-                database.execute(new Custom(String.format("DELETE FROM %s;", table)));
+    private final StorageActions<T> actions = new StorageActions<T>() {
+        @Override
+        public void add(T o) {
+            JsonObject object = StorageUtil.gson.toJsonTree(o).getAsJsonObject();
+            List<String> keys = new ArrayList<>();
+            List<String> objects = new ArrayList<>();
+            for (String key : JsonUtils.keySet(object)) {
+                if (!structure.getColumnNames().contains(key)) {
+                    continue;
+                }
+                keys.add(key);
+                if (object.get(key).isJsonObject() || object.get(key).isJsonArray()) {
+                    objects.add(StorageUtil.gson.toJson(object.get(key)));
+                } else {
+                    if (object.get(key).isJsonNull()) {
+                        objects.add(null);
+                    } else {
+                        objects.add(object.get(key).getAsString());
+                    }
+                }
             }
+            String[] finalObjects = new String[objects.size()];
+            objects.toArray(finalObjects);
 
-            for (Map.Entry<JsonObject, ComparatorAction> r : result.getComparedOutput().entrySet()) {
-                JsonObject object = r.getKey();
-                if (r.getValue() == ComparatorAction.REMOVE) {
-                    database.execute(new Custom(
-                            String.format("DELETE FROM %s WHERE %s='%s';", table, result.getKey(), object.get(result.getKey()).getAsString())));
+            database.execute(new Insert(table, String.join(",", keys), finalObjects));
+        }
+
+        @Override
+        public void remove(T o) {
+            JsonObject object = StorageUtil.gson.toJsonTree(o).getAsJsonObject();
+            database.execute(new Custom(
+                    String.format("DELETE FROM %s WHERE %s='%s';", table, storage.getKey(), object.get(storage.getKey()).getAsString())));
+
+        }
+
+        @Override
+        public void update(T o) {
+            JsonObject object = StorageUtil.gson.toJsonTree(o).getAsJsonObject();
+            UpdateValue update = null;
+            for (String key : JsonUtils.keySet(object)) {
+                if (key.equals(storage.getKey())) {
+                    continue;
                 }
-
-                if (r.getValue() == ComparatorAction.ADD) {
-                    List<String> keys = new ArrayList<>();
-                    List<String> objects = new ArrayList<>();
-                    for (String key : JsonUtils.keySet(object)) {
-                        if (!structure.getColumnNames().contains(key)) {
-                            continue;
-                        }
-                        keys.add(key);
-                        if (object.get(key).isJsonObject() || object.get(key).isJsonArray()) {
-                            objects.add(StorageUtil.gson.toJson(object.get(key)));
+                if (update == null) {
+                    if (object.get(key).isJsonObject() || object.get(key).isJsonArray()) {
+                        update = new UpdateValue(key, StorageUtil.gson.toJson(object.get(key)));
+                    } else {
+                        if (object.get(key).isJsonNull()) {
+                            update = new UpdateValue(key, null);
                         } else {
-                            if (object.get(key).isJsonNull()) {
-                                objects.add(null);
-                            } else {
-                                objects.add(object.get(key).getAsString());
-                            }
+                            update = new UpdateValue(key, object.get(key).getAsString());
                         }
                     }
-
-                    String[] finalObjects = new String[objects.size()];
-                    objects.toArray(finalObjects);
-
-                    database.execute(new Insert(table, String.join(",", keys), finalObjects));
+                    continue;
                 }
-
-                if (r.getValue() == ComparatorAction.UPDATE) {
-                    UpdateValue update = null;
-                    for (String key : JsonUtils.keySet(object)) {
-                        if (key.equals(result.getKey())) {
-                            continue;
-                        }
-                        if (update == null) {
-                            if (object.get(key).isJsonObject() || object.get(key).isJsonArray()) {
-                                update = new UpdateValue(key, StorageUtil.gson.toJson(object.get(key)));
-                            } else {
-                                if (object.get(key).isJsonNull()) {
-                                    update = new UpdateValue(key, null);
-                                } else {
-                                    update = new UpdateValue(key, object.get(key).getAsString());
-                                }
-                            }
-                            continue;
-                        }
-                        if (object.get(key).isJsonObject() || object.get(key).isJsonArray()) {
-                            update.add(key, StorageUtil.gson.toJson(object.get(key)));
-                        } else if (object.get(key).isJsonNull()) {
-                            update.add(key, "");
-                        } else {
-                            update.add(key, object.get(key).getAsString());
-                        }
-                    }
-
-                    String obj = object.get(result.getKey()).isJsonNull() ? null : object.get(result.getKey()).getAsString();
-
-                    database.execute(new Update(table, update, String.format("%s='%s'", result.getKey(), obj)));
+                if (object.get(key).isJsonObject() || object.get(key).isJsonArray()) {
+                    update.add(key, StorageUtil.gson.toJson(object.get(key)));
+                } else if (object.get(key).isJsonNull()) {
+                    update.add(key, "");
+                } else {
+                    update.add(key, object.get(key).getAsString());
                 }
             }
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+            String obj = object.get(storage.getKey()).isJsonNull() ? null : object.get(storage.getKey()).getAsString();
 
-     */
+            database.execute(new Update(table, update, String.format("%s='%s'", storage.getKey(), obj)));
+        }
+
+        @Override
+        public Collection<T> get() {
+            List<T> temp = new ArrayList<>();
+            Result result = database.select(new Select(table, "*", filter));
+            for (Row r : result.getRows()) {
+                JsonObject jsonObject = StorageUtil.gson.fromJson(StorageUtil.gson.toJson(r.getColumns()), JsonObject.class);
+                temp.add(StorageUtil.gson.fromJson(jsonObject, storage.getClassType()));
+            }
+            return temp;
+        }
+    };
 
     @Override
     public void save() {
-
+        comparator.save(actions);
     }
 
     @Override
     public void load() {
-
+        comparator.load(storage.actions());
     }
-
-    /*
-    @Override
-    public JsonArray load() {
-        if (!isAvailable()) {
-            return new JsonArray();
-        }
-        Result result = database.select(new Select(table, "*", filter));
-        JsonArray array = new JsonArray();
-
-        for (Row r : result.getRows()) {
-            array.add(StorageUtil.gson.fromJson(StorageUtil.gson.toJson(r.getColumns()), JsonObject.class));
-        }
-
-        return array;
-    }
-
-     */
 
     @Override
     public boolean isAvailable() {
@@ -199,15 +168,10 @@ public class SQLStorageHandler<T> extends StorageHandler<T> {
 
     @Override
     public StorageActions<T> actions() {
-        return null;
+        return actions;
     }
 
-    public void setFilter(String filter) {
-        this.filter = filter;
-    }
-
-    private void onLoop() {
-
+    private void repair() {
         if (!repaired) {
             try {
 
@@ -251,15 +215,12 @@ public class SQLStorageHandler<T> extends StorageHandler<T> {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
             repaired = true;
         }
     }
 
     @Override
     public void close() {
-        executor.shutdownNow();
-        executor = null;
         try {
             database.getConnection().close();
             database.close();

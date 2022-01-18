@@ -20,29 +20,18 @@
 
 package com.noahhusby.lib.data.storage.handlers;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.OperationType;
 import com.noahhusby.lib.data.storage.StorageActions;
 import com.noahhusby.lib.data.storage.StorageUtil;
-import com.noahhusby.lib.data.storage.compare.ComparatorAction;
-import com.noahhusby.lib.data.storage.compare.CompareResult;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.bson.BsonReader;
-import org.bson.BsonWriter;
 import org.bson.Document;
-import org.bson.codecs.Codec;
-import org.bson.codecs.DecoderContext;
-import org.bson.codecs.EncoderContext;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 
 @RequiredArgsConstructor
@@ -74,7 +63,7 @@ public class MongoStorageHandler<T> extends StorageHandler<T> {
         public Collection<T> get() {
             FindIterable<Document> documents = collection.find();
             ArrayList<T> objects = new ArrayList<>();
-            for(Document document : documents) {
+            for (Document document : documents) {
                 T object = StorageUtil.gson.fromJson(StorageUtil.gson.toJsonTree(document), storage.getClassType());
                 objects.add(object);
             }
@@ -94,8 +83,12 @@ public class MongoStorageHandler<T> extends StorageHandler<T> {
 
     public void enableEventUpdates() {
         collection.watch().forEach((Consumer<? super ChangeStreamDocument<Document>>) x -> {
-            if (x.getOperationType() == OperationType.INSERT || x.getOperationType() == OperationType.REPLACE || x.getOperationType() == OperationType.DELETE) {
-                load();
+            if (x.getOperationType() == OperationType.INSERT) {
+                storage.actions().add(StorageUtil.gson.fromJson(StorageUtil.gson.toJsonTree(x.getFullDocument()), storage.getClassType()));
+            } else if (x.getOperationType() == OperationType.REPLACE) {
+                storage.actions().update(StorageUtil.gson.fromJson(StorageUtil.gson.toJsonTree(x.getFullDocument()), storage.getClassType()));
+            } else if (x.getOperationType() == OperationType.DELETE) {
+                storage.actions().remove(StorageUtil.gson.fromJson(StorageUtil.gson.toJsonTree(x.getFullDocument()), storage.getClassType()));
             }
         });
     }

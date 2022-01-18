@@ -22,18 +22,13 @@ package com.noahhusby.lib.data.storage.compare;
 
 import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.noahhusby.lib.data.JsonUtils;
 import com.noahhusby.lib.data.storage.StorageActions;
 import com.noahhusby.lib.data.storage.StorageUtil;
 import com.noahhusby.lib.data.storage.handlers.StorageHandler;
 
-import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -41,6 +36,7 @@ public class ValueComparator<T> implements Comparator<T> {
     protected Map<Object, T> lastSave = null;
     protected Map<Object, T> lastLoad = null;
     private StorageHandler<T> handler;
+
     public ValueComparator(StorageHandler<T> handler) {
         this.handler = handler;
     }

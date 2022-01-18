@@ -20,12 +20,7 @@
 
 package com.noahhusby.lib.data.storage;
 
-import com.noahhusby.lib.data.storage.compare.Comparator;
-import com.noahhusby.lib.data.storage.handlers.StorageHandler;
-
 import java.io.Closeable;
-import java.lang.reflect.Type;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public interface Storage<T> extends Closeable {
