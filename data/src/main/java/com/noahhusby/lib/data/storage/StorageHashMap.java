@@ -30,6 +30,7 @@ import lombok.Getter;
 import lombok.SneakyThrows;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -60,7 +61,9 @@ public class StorageHashMap<K, V> extends HashMap<K, V> implements Storage<V> {
         @Override
         public void add(V o) {
             try {
-                K objKey = (K) o.getClass().getField(key).get(o);
+                Field keyField = o.getClass().getDeclaredField(key);
+                keyField.setAccessible(true);
+                K objKey = (K) keyField.get(o);
                 put(objKey, o);
                 events.listeners.forEach(l -> l.onAddAction(new StorageAddEvent<>(StorageHashMap.this, o)));
             } catch (IllegalAccessException | NoSuchFieldException e) {
@@ -71,7 +74,9 @@ public class StorageHashMap<K, V> extends HashMap<K, V> implements Storage<V> {
         @Override
         public void remove(V o) {
             try {
-                K objKey = (K) o.getClass().getField(key).get(o);
+                Field keyField = o.getClass().getDeclaredField(key);
+                keyField.setAccessible(true);
+                K objKey = (K) keyField.get(o);
                 StorageHashMap.this.remove(objKey);
                 events.listeners.forEach(l -> l.onRemoveAction(new StorageRemoveEvent<>(StorageHashMap.this, o)));
             } catch (IllegalAccessException | NoSuchFieldException e) {
@@ -82,7 +87,9 @@ public class StorageHashMap<K, V> extends HashMap<K, V> implements Storage<V> {
         @Override
         public void update(V o) {
             try {
-                K objKey = (K) o.getClass().getField(key).get(o);
+                Field keyField = o.getClass().getDeclaredField(key);
+                keyField.setAccessible(true);
+                K objKey = (K) keyField.get(o);
                 put(objKey, o);
                 events.listeners.forEach(l -> l.onUpdateAction(new StorageUpdateEvent<>(StorageHashMap.this, o)));
             } catch (IllegalAccessException | NoSuchFieldException e) {

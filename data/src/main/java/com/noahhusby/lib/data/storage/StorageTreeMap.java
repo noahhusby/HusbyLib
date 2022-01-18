@@ -30,6 +30,7 @@ import lombok.Getter;
 import lombok.SneakyThrows;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -66,7 +67,9 @@ public class StorageTreeMap<K, V> extends TreeMap<K, V> implements Storage<V> {
         @Override
         public void add(V o) {
             try {
-                K objKey = (K) o.getClass().getField(key).get(o);
+                Field keyField = o.getClass().getDeclaredField(key);
+                keyField.setAccessible(true);
+                K objKey = (K) keyField.get(o);
                 put(objKey, o);
                 events.listeners.forEach(l -> l.onAddAction(new StorageAddEvent<>(StorageTreeMap.this, o)));
             } catch (IllegalAccessException | NoSuchFieldException e) {
@@ -77,7 +80,9 @@ public class StorageTreeMap<K, V> extends TreeMap<K, V> implements Storage<V> {
         @Override
         public void remove(V o) {
             try {
-                K objKey = (K) o.getClass().getField(key).get(o);
+                Field keyField = o.getClass().getDeclaredField(key);
+                keyField.setAccessible(true);
+                K objKey = (K) keyField.get(o);
                 StorageTreeMap.this.remove(objKey);
                 events.listeners.forEach(l -> l.onRemoveAction(new StorageRemoveEvent<>(StorageTreeMap.this, o)));
             } catch (IllegalAccessException | NoSuchFieldException e) {
@@ -88,7 +93,9 @@ public class StorageTreeMap<K, V> extends TreeMap<K, V> implements Storage<V> {
         @Override
         public void update(V o) {
             try {
-                K objKey = (K) o.getClass().getField(key).get(o);
+                Field keyField = o.getClass().getDeclaredField(key);
+                keyField.setAccessible(true);
+                K objKey = (K) keyField.get(o);
                 put(objKey, o);
                 events.listeners.forEach(l -> l.onUpdateAction(new StorageUpdateEvent<>(StorageTreeMap.this, o)));
             } catch (IllegalAccessException | NoSuchFieldException e) {
