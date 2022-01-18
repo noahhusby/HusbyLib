@@ -38,6 +38,10 @@ public class Structure {
     private final boolean repair;
     private List<String> columnNames;
 
+    public static StructureBuilder builder() {
+        return new StructureBuilder();
+    }
+
     public List<String> getColumnNames() {
         if (columnNames == null) {
             columnNames = new ArrayList<>();
@@ -47,10 +51,6 @@ public class Structure {
         }
 
         return columnNames;
-    }
-
-    public static StructureBuilder builder() {
-        return new StructureBuilder();
     }
 
     public static class StructureBuilder {

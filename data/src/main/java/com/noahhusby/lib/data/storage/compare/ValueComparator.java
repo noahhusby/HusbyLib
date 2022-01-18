@@ -32,14 +32,12 @@ import java.util.Map;
 import java.util.Set;
 
 public class ValueComparator implements Comparator {
+    protected Map<JsonElement, JsonObject> lastSave = null;
+    protected Map<JsonElement, JsonObject> lastLoad = null;
     private String key;
-
     public ValueComparator(String key) {
         this.key = key;
     }
-
-    protected Map<JsonElement, JsonObject> lastSave = null;
-    protected Map<JsonElement, JsonObject> lastLoad = null;
 
     @Override
     public CompareResult save(JsonArray array, StorageHandler handler) {

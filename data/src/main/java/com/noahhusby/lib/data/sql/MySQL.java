@@ -42,6 +42,7 @@ import java.util.concurrent.CompletableFuture;
 public class MySQL extends SQLDatabase {
 
     private final Gson gson = new Gson();
+    private HikariDataSource ds;
 
     public MySQL() {
     }
@@ -57,8 +58,6 @@ public class MySQL extends SQLDatabase {
         config.addDataSourceProperty("useSSL", false);
         ds = new HikariDataSource(config);
     }
-
-    private HikariDataSource ds;
 
     @Override
     public Connection getConnection() {

@@ -34,24 +34,20 @@ public class Select implements Query {
         this.filter = filter;
     }
 
-    public void setFilter(String filter) {
-        this.filter = filter;
-    }
-
-    public void setTable(String table) {
-        this.table = table;
-    }
-
-    public void setColumns(String columns) {
-        this.columns = columns;
-    }
-
     public String getFilter() {
         return filter;
     }
 
+    public void setFilter(String filter) {
+        this.filter = filter;
+    }
+
     public String getTable() {
         return table;
+    }
+
+    public void setTable(String table) {
+        this.table = table;
     }
 
     public String getColumns() {
@@ -62,6 +58,9 @@ public class Select implements Query {
         }
     }
 
+    public void setColumns(String columns) {
+        this.columns = columns;
+    }
 
     @Override
     public String query() {

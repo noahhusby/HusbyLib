@@ -52,7 +52,7 @@ public interface Storage<T> extends Closeable {
 
     StorageMigration migrate();
 
-    StorageEvents events();
+    StorageEvents<T> events();
 
     StorageActions<T> actions();
 }

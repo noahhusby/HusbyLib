@@ -29,6 +29,11 @@ import com.noahhusby.lib.data.storage.compare.ComparatorAction;
 import com.noahhusby.lib.data.storage.compare.CompareResult;
 import com.noahhusby.lib.data.storage.compare.CutComparator;
 import com.noahhusby.lib.data.storage.compare.ValueComparator;
+import com.noahhusby.lib.data.storage.events.action.StorageAddEvent;
+import com.noahhusby.lib.data.storage.events.action.StorageRemoveEvent;
+import com.noahhusby.lib.data.storage.events.action.StorageUpdateEvent;
+import com.noahhusby.lib.data.storage.events.transfer.StorageLoadEvent;
+import com.noahhusby.lib.data.storage.events.transfer.StorageSaveEvent;
 import com.noahhusby.lib.data.storage.handlers.StorageHandler;
 import lombok.SneakyThrows;
 
@@ -67,6 +72,7 @@ public class StorageHashMap<K, V> extends HashMap<K, V> implements Storage<V> {
             try {
                 K objKey = (K) o.getClass().getField(key).get(o);
                 put(objKey, o);
+                events.listeners.forEach(l -> l.onAddAction(new StorageAddEvent<>(StorageHashMap.this, o)));
             } catch (IllegalAccessException | NoSuchFieldException e) {
                 e.printStackTrace();
             }
@@ -77,6 +83,7 @@ public class StorageHashMap<K, V> extends HashMap<K, V> implements Storage<V> {
             try {
                 K objKey = (K) o.getClass().getField(key).get(o);
                 StorageHashMap.this.remove(objKey);
+                events.listeners.forEach(l -> l.onRemoveAction(new StorageRemoveEvent<>(StorageHashMap.this, o)));
             } catch (IllegalAccessException | NoSuchFieldException e) {
                 e.printStackTrace();
             }
@@ -84,11 +91,17 @@ public class StorageHashMap<K, V> extends HashMap<K, V> implements Storage<V> {
 
         @Override
         public void update(V o) {
-            add(o);
+            try {
+                K objKey = (K) o.getClass().getField(key).get(o);
+                put(objKey, o);
+                events.listeners.forEach(l -> l.onUpdateAction(new StorageUpdateEvent<>(StorageHashMap.this, o)));
+            } catch (IllegalAccessException | NoSuchFieldException e) {
+                e.printStackTrace();
+            }
         }
     };
 
-    private final StorageEvents events = new StorageEvents();
+    private final StorageEvents<V> events = new StorageEvents<>();
     private final StorageMigration migrate = new StorageMigration(this);
 
     @Override
@@ -155,7 +168,7 @@ public class StorageHashMap<K, V> extends HashMap<K, V> implements Storage<V> {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        events.loadEvents.forEach(Runnable::run);
+        events.listeners.forEach(l -> l.onLoad(new StorageLoadEvent<>(this)));
     }
 
     @Override
@@ -170,7 +183,7 @@ public class StorageHashMap<K, V> extends HashMap<K, V> implements Storage<V> {
             for (Map.Entry<StorageHandler, Comparator> e : storageHandlers.entrySet()) {
                 e.getKey().save(e.getValue().save(array, e.getKey()));
             }
-            events.saveEvents.forEach(Runnable::run);
+            events.listeners.forEach(l -> l.onSave(new StorageSaveEvent<>(this)));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -205,7 +218,7 @@ public class StorageHashMap<K, V> extends HashMap<K, V> implements Storage<V> {
     }
 
     @Override
-    public StorageEvents events() {
+    public StorageEvents<V> events() {
         return events;
     }
 

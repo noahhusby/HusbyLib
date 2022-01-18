@@ -36,12 +36,25 @@ public class Insert implements Query {
         this.data = data;
     }
 
+    public String getColumns() {
+        return columns;
+    }
+
     public void setColumns(String columns) {
         this.columns = columns;
     }
 
+    public String getTable() {
+        return
+                table;
+    }
+
     public void setTable(String table) {
         this.table = table;
+    }
+
+    public String[] getData() {
+        return data;
     }
 
     public void setData(String... data) {
@@ -50,19 +63,6 @@ public class Insert implements Query {
 
     public void setData(List<String> data) {
         this.data = (String[]) data.toArray();
-    }
-
-    public String getColumns() {
-        return columns;
-    }
-
-    public String getTable() {
-        return
-                table;
-    }
-
-    public String[] getData() {
-        return data;
     }
 
     @Override
