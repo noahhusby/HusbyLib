@@ -87,6 +87,10 @@ public class MongoStorageHandler<T> extends StorageHandler<T> {
     }
 
     public void enableEventUpdates() {
+        enableEventUpdates(e -> {});
+    }
+
+    public void enableEventUpdates(Consumer<Exception> ec) {
         eventThread = new Thread(() -> {
             try {
                 collection.watch().forEach((Consumer<? super ChangeStreamDocument<Document>>) x -> {
@@ -101,7 +105,8 @@ public class MongoStorageHandler<T> extends StorageHandler<T> {
                         storage.actions().remove(StorageUtil.gson.fromJson(StorageUtil.gson.toJsonTree(model), storage.getClassType()));
                     }
                 });
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                ec.accept(e);
             }
         });
         eventThread.start();
