@@ -46,6 +46,7 @@ public class MongoStorageHandler<T> extends StorageHandler<T> {
         public void add(T o) {
             Document document = Document.parse(StorageUtil.gson.toJson(o));
             document.append("_id", document.get(storage.getKey()));
+            document.remove(storage.getKey());
             collection.insertOne(document);
         }
 
@@ -58,7 +59,9 @@ public class MongoStorageHandler<T> extends StorageHandler<T> {
         @Override
         public void update(T o) {
             Document document = Document.parse(StorageUtil.gson.toJson(o));
-            collection.replaceOne(new Document("_id", document.get(storage.getKey())), document);
+            document.append("_id", document.get(storage.getKey()));
+            document.remove(storage.getKey());
+            collection.replaceOne(new Document("_id", document.get("_id")), document);
         }
 
         @Override
