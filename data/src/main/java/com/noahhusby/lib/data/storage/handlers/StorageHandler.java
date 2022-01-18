@@ -31,7 +31,7 @@ import java.io.Closeable;
 /**
  * @author Noah Husby
  */
-public abstract class StorageHandler implements Closeable {
+public abstract class StorageHandler<T> implements Closeable {
 
     @Getter
     private Storage storage;

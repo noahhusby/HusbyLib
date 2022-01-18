@@ -50,7 +50,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class SQLStorageHandler extends StorageHandler {
+public class SQLStorageHandler<T> extends StorageHandler<T> {
     private ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
     private SQLDatabase database;
 

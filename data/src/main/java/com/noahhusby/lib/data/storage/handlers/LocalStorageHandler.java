@@ -29,7 +29,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
-public class LocalStorageHandler extends StorageHandler {
+public class LocalStorageHandler<T> extends StorageHandler<T> {
     private final File file;
 
     public LocalStorageHandler(File file) {

@@ -27,7 +27,7 @@ import java.io.Closeable;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public interface Storage extends Closeable {
+public interface Storage<T> extends Closeable {
     void registerHandler(StorageHandler handler);
 
     void registerHandler(StorageHandler handler, Comparator comparator);
@@ -56,7 +56,7 @@ public interface Storage extends Closeable {
 
     void migrate(int priority);
 
-    void onLoadEvent(Runnable runnable);
+    StorageEvents events();
 
-    void onSaveEvent(Runnable runnable);
+    StorageActions<T> actions();
 }

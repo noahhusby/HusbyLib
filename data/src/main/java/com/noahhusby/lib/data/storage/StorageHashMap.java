@@ -44,7 +44,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author Noah Husby
  */
-public class StorageHashMap<K, V> extends HashMap<K, V> implements Storage {
+public class StorageHashMap<K, V> extends HashMap<K, V> implements Storage<V> {
     private final String key;
     private final Map<StorageHandler, Comparator> storageHandlers = new HashMap<>();
     private Object K;
@@ -58,11 +58,27 @@ public class StorageHashMap<K, V> extends HashMap<K, V> implements Storage {
         key = StorageUtil.getKeyAnnotation(vClazz);
     }
 
-    private final List<Runnable> saveEvents = new ArrayList<>();
-    private final List<Runnable> loadEvents = new ArrayList<>();
-
     private ScheduledExecutorService autoSave = null;
     private ScheduledExecutorService autoLoad = null;
+
+    private final StorageActions<V> actions = new StorageActions<V>() {
+        @Override
+        public void add(V o) {
+
+        }
+
+        @Override
+        public void remove(V o) {
+
+        }
+
+        @Override
+        public void update(V o) {
+
+        }
+    };
+
+    private final StorageEvents events = new StorageEvents();
 
     @Override
     public void registerHandler(StorageHandler handler) {
@@ -138,7 +154,7 @@ public class StorageHashMap<K, V> extends HashMap<K, V> implements Storage {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        loadEvents.forEach(Runnable::run);
+        events.loadEvents.forEach(Runnable::run);
     }
 
     @Override
@@ -153,7 +169,7 @@ public class StorageHashMap<K, V> extends HashMap<K, V> implements Storage {
             for (Map.Entry<StorageHandler, Comparator> e : storageHandlers.entrySet()) {
                 e.getKey().save(e.getValue().save(array, e.getKey()));
             }
-            saveEvents.forEach(Runnable::run);
+            events.saveEvents.forEach(Runnable::run);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -241,13 +257,13 @@ public class StorageHashMap<K, V> extends HashMap<K, V> implements Storage {
     }
 
     @Override
-    public void onLoadEvent(Runnable runnable) {
-        loadEvents.add(runnable);
+    public StorageEvents events() {
+        return events;
     }
 
     @Override
-    public void onSaveEvent(Runnable runnable) {
-        saveEvents.add(runnable);
+    public StorageActions<V> actions() {
+        return actions;
     }
 
     @SneakyThrows

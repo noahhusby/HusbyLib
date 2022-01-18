@@ -37,7 +37,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 @RequiredArgsConstructor
-public class MongoStorageHandler extends StorageHandler {
+public class MongoStorageHandler<T> extends StorageHandler<T> {
     @Getter
     private final MongoCollection<Document> collection;
 
