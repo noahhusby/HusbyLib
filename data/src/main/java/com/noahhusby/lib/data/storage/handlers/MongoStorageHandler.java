@@ -69,6 +69,7 @@ public class MongoStorageHandler<T> extends StorageHandler<T> {
             FindIterable<Document> documents = collection.find();
             ArrayList<T> objects = new ArrayList<>();
             for (Document document : documents) {
+                document.append(storage.getKey(), document.get("_id"));
                 T object = StorageUtil.gson.fromJson(StorageUtil.gson.toJsonTree(document), storage.getClassType());
                 objects.add(object);
             }
@@ -95,9 +96,12 @@ public class MongoStorageHandler<T> extends StorageHandler<T> {
             try {
                 collection.watch().forEach((Consumer<? super ChangeStreamDocument<Document>>) x -> {
                     if (x.getOperationType() == OperationType.INSERT) {
-                        storage.actions().add(StorageUtil.gson.fromJson(StorageUtil.gson.toJsonTree(x.getFullDocument()), storage.getClassType()));
+                        Document document = x.getFullDocument();
+                        document.append(storage.getKey(), document.get("_id"));
+                        storage.actions().add(StorageUtil.gson.fromJson(StorageUtil.gson.toJsonTree(document), storage.getClassType()));
                     } else if (x.getOperationType() == OperationType.UPDATE) {
                         Document doc = collection.find(x.getDocumentKey()).first();
+                        doc.append(storage.getKey(), doc.get("_id"));
                         storage.actions().update(StorageUtil.gson.fromJson(doc.toJson(), storage.getClassType()));
                     } else if (x.getOperationType() == OperationType.DELETE) {
                         String key = x.getDocumentKey().get("_id").asString().getValue();
