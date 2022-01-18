@@ -54,7 +54,6 @@ public class StorageUtil {
             })
             .create();
 
-
     public static String getKeyAnnotation(Class<?> clazz) {
         if (Objects.isNull(clazz)) {
             return null;
