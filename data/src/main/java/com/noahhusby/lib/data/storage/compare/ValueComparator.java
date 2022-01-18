@@ -25,108 +25,119 @@ import com.google.common.collect.Maps;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.noahhusby.lib.data.JsonUtils;
+import com.noahhusby.lib.data.storage.StorageActions;
+import com.noahhusby.lib.data.storage.StorageUtil;
 import com.noahhusby.lib.data.storage.handlers.StorageHandler;
 
+import java.lang.reflect.Type;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class ValueComparator implements Comparator {
-    protected Map<JsonElement, JsonObject> lastSave = null;
-    protected Map<JsonElement, JsonObject> lastLoad = null;
-    private String key;
-    public ValueComparator(String key) {
-        this.key = key;
+public class ValueComparator<T> implements Comparator<T> {
+    protected Map<Object, T> lastSave = null;
+    protected Map<Object, T> lastLoad = null;
+    private StorageHandler<T> handler;
+    public ValueComparator(StorageHandler<T> handler) {
+        this.handler = handler;
     }
 
     @Override
-    public CompareResult save(JsonArray array, StorageHandler handler) {
+    public void save(StorageActions<T> actions) {
         Map<JsonObject, ComparatorAction> compared = new HashMap<>();
-        Map<JsonElement, JsonObject> keyedSave = getKeyedArray(array);
-        Map<JsonElement, JsonObject> keyedLoad = getKeyedArray(handler.load());
+        Map<Object, T> keyedSave = getKeyedArray(handler.getStorage().actions().get());
+        Map<Object, T> keyedLoad = getKeyedArray(actions.get());
 
         if (lastSave == null) {
             // Since the parent list has never been saved before, we will all of the current keys against the stored data and add what is necessary.
-            for (Map.Entry<JsonElement, JsonObject> e : keyedSave.entrySet()) {
+            for (Map.Entry<Object, T> e : keyedSave.entrySet()) {
                 if (!containsKey(e.getKey(), keyedLoad.keySet())) {
-                    compared.put(e.getValue(), ComparatorAction.ADD);
+                    actions.add(e.getValue());
                 }
             }
         } else {
-            MapDifference<JsonElement, JsonObject> savedDifference = Maps.difference(lastSave, keyedSave);
-            for (Map.Entry<JsonElement, JsonObject> e : savedDifference.entriesOnlyOnLeft().entrySet()) {
+            MapDifference<Object, Object> savedDifference = Maps.difference(lastSave, keyedSave);
+            for (Map.Entry<Object, Object> e : savedDifference.entriesOnlyOnLeft().entrySet()) {
                 if (containsKey(e.getKey(), keyedLoad.keySet())) {
-                    compared.put(e.getValue(), ComparatorAction.REMOVE);
+                    actions.remove(toType(e.getValue()));
                 }
             }
 
-            for (Map.Entry<JsonElement, JsonObject> e : savedDifference.entriesOnlyOnRight().entrySet()) {
+            for (Map.Entry<Object, Object> e : savedDifference.entriesOnlyOnRight().entrySet()) {
                 if (!containsKey(e.getKey(), keyedLoad.keySet())) {
-                    compared.put(e.getValue(), ComparatorAction.ADD);
+                    actions.add(toType(e.getValue()));
                 }
             }
 
-            for (Map.Entry<JsonElement, MapDifference.ValueDifference<JsonObject>> e : savedDifference.entriesDiffering().entrySet()) {
-                compared.put(e.getValue().rightValue(), ComparatorAction.UPDATE);
+            for (Map.Entry<Object, MapDifference.ValueDifference<Object>> e : savedDifference.entriesDiffering().entrySet()) {
+                actions.update(toType(e.getValue().rightValue()));
             }
         }
 
         lastSave = keyedSave;
-        return new CompareResult(array, compared, key, false);
     }
 
     @Override
-    public CompareResult load(JsonArray array, StorageHandler handler) {
-        Map<JsonObject, ComparatorAction> compared = new HashMap<>();
-        Map<JsonElement, JsonObject> keyedSave = getKeyedArray(array);
-        Map<JsonElement, JsonObject> keyedLoad = getKeyedArray(handler.load());
+    public void load(StorageActions<T> actions) {
+        Map<Object, T> keyedSave = getKeyedArray(actions.get());
+        Map<Object, T> keyedLoad = getKeyedArray(handler.actions().get());
 
         if (lastLoad == null) {
             // Since the parent list has never been saved before, we will all of the current keys against the stored data and add what is necessary.
-            for (Map.Entry<JsonElement, JsonObject> e : keyedLoad.entrySet()) {
+            for (Map.Entry<Object, T> e : keyedLoad.entrySet()) {
                 if (!containsKey(e.getKey(), keyedSave.keySet())) {
-                    compared.put(e.getValue(), ComparatorAction.ADD);
+                    actions.add(e.getValue());
                 }
             }
         } else {
-            MapDifference<JsonElement, JsonObject> loadedDifference = Maps.difference(lastLoad, keyedLoad);
-            for (Map.Entry<JsonElement, JsonObject> e : loadedDifference.entriesOnlyOnLeft().entrySet()) {
+            MapDifference<Object, Object> loadedDifference = Maps.difference(lastLoad, keyedLoad);
+            for (Map.Entry<Object, Object> e : loadedDifference.entriesOnlyOnLeft().entrySet()) {
                 if (containsKey(e.getKey(), keyedSave.keySet())) {
-                    compared.put(e.getValue(), ComparatorAction.REMOVE);
+                    actions.remove(toType(e.getValue()));
                 }
             }
 
-            for (Map.Entry<JsonElement, JsonObject> e : loadedDifference.entriesOnlyOnRight().entrySet()) {
+            for (Map.Entry<Object, Object> e : loadedDifference.entriesOnlyOnRight().entrySet()) {
                 if (!containsKey(e.getKey(), keyedSave.keySet())) {
-                    compared.put(e.getValue(), ComparatorAction.ADD);
+                    actions.add(toType(e.getValue()));
                 }
             }
 
-            for (Map.Entry<JsonElement, MapDifference.ValueDifference<JsonObject>> e : loadedDifference.entriesDiffering().entrySet()) {
-                compared.put(e.getValue().rightValue(), ComparatorAction.UPDATE);
+            for (Map.Entry<Object, MapDifference.ValueDifference<Object>> e : loadedDifference.entriesDiffering().entrySet()) {
+                actions.update(toType(e.getValue().rightValue()));
             }
         }
 
         lastLoad = keyedLoad;
-        return new CompareResult(array, compared, key, false);
     }
 
 
-    protected Map<JsonElement, JsonObject> getKeyedArray(JsonArray array) {
-        Map<JsonElement, JsonObject> temp = new HashMap<>();
-        for (JsonElement e : array) {
-            JsonObject object = e.getAsJsonObject();
-            temp.put(object.get(key), object);
+    protected Map<Object, T> getKeyedArray(Collection<T> objects) {
+        Map<Object, T> temp = new HashMap<>();
+        for (T obj : objects) {
+            try {
+                Object key = obj.getClass().getField(handler.getStorage().getKey()).get(obj);
+                temp.put(key, obj);
+            } catch (IllegalAccessException | NoSuchFieldException e) {
+                e.printStackTrace();
+            }
         }
         return temp;
     }
 
-    protected boolean containsKey(JsonElement key, Set<JsonElement> elements) {
-        for (JsonElement e : elements) {
+    protected boolean containsKey(Object key, Set<Object> elements) {
+        for (Object e : elements) {
             if (key.equals(e)) {
                 return true;
             }
         }
         return false;
+    }
+
+    private T toType(Object o) {
+        return StorageUtil.gson.fromJson(StorageUtil.gson.toJsonTree(o), handler.getStorage().getClassType());
     }
 }

@@ -24,19 +24,11 @@ import com.noahhusby.lib.data.storage.compare.Comparator;
 import com.noahhusby.lib.data.storage.handlers.StorageHandler;
 
 import java.io.Closeable;
+import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public interface Storage<T> extends Closeable {
-    void registerHandler(StorageHandler handler);
-
-    void registerHandler(StorageHandler handler, Comparator comparator);
-
-    Map<StorageHandler, Comparator> getHandlers();
-
-    void unregisterHandler(StorageHandler handler);
-
-    void clearHandlers();
 
     void load();
 
@@ -49,6 +41,12 @@ public interface Storage<T> extends Closeable {
     void setAutoLoad(long period, TimeUnit unit);
 
     void setAutoSave(long period, TimeUnit unit);
+
+    String getKey();
+
+    Class<T> getClassType();
+
+    StorageHandlers<T> handlers();
 
     StorageMigration migrate();
 

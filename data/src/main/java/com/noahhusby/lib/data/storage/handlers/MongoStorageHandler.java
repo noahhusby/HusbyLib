@@ -26,13 +26,22 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.OperationType;
+import com.noahhusby.lib.data.storage.StorageActions;
 import com.noahhusby.lib.data.storage.StorageUtil;
 import com.noahhusby.lib.data.storage.compare.ComparatorAction;
 import com.noahhusby.lib.data.storage.compare.CompareResult;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.bson.BsonReader;
+import org.bson.BsonWriter;
 import org.bson.Document;
+import org.bson.codecs.Codec;
+import org.bson.codecs.DecoderContext;
+import org.bson.codecs.EncoderContext;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -41,47 +50,46 @@ public class MongoStorageHandler<T> extends StorageHandler<T> {
     @Getter
     private final MongoCollection<Document> collection;
 
-    @Override
-    public void save(CompareResult result) {
-        try {
-            if (result.isCleared()) {
-                collection.deleteMany(new Document());
-            }
-
-            for (Map.Entry<JsonObject, ComparatorAction> r : result.getComparedOutput().entrySet()) {
-                JsonObject object = r.getKey();
-                if (r.getValue() == ComparatorAction.REMOVE) {
-                    Document document = Document.parse(StorageUtil.gson.toJson(object));
-                    collection.deleteOne(new Document("_id", document.get(result.getKey())));
-                }
-
-                if (r.getValue() == ComparatorAction.ADD) {
-                    Document document = Document.parse(StorageUtil.gson.toJson(object));
-                    if (result.getKey() != null) {
-                        document.append("_id", document.get(result.getKey()));
-                    }
-                    collection.insertOne(document);
-                }
-
-                if (r.getValue() == ComparatorAction.UPDATE) {
-                    Document document = Document.parse(StorageUtil.gson.toJson(object));
-                    collection.replaceOne(new Document("_id", document.get(result.getKey())), document);
-                }
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
+    private final StorageActions<T> actions = new StorageActions<T>() {
+        @Override
+        public void add(T o) {
+            Document document = Document.parse(StorageUtil.gson.toJson(o));
+            document.append("_id", document.get(storage.getKey()));
+            collection.insertOne(document);
         }
+
+        @Override
+        public void remove(T o) {
+            Document document = Document.parse(StorageUtil.gson.toJson(o));
+            collection.deleteOne(new Document("_id", document.get(storage.getKey())));
+        }
+
+        @Override
+        public void update(T o) {
+            Document document = Document.parse(StorageUtil.gson.toJson(o));
+            collection.replaceOne(new Document("_id", document.get(storage.getKey())), document);
+        }
+
+        @Override
+        public Collection<T> get() {
+            FindIterable<Document> documents = collection.find();
+            ArrayList<T> objects = new ArrayList<>();
+            for(Document document : documents) {
+                T object = StorageUtil.gson.fromJson(StorageUtil.gson.toJsonTree(document), storage.getClassType());
+                objects.add(object);
+            }
+            return objects;
+        }
+    };
+
+    @Override
+    public void save() {
+        comparator.save(actions);
     }
 
     @Override
-    public JsonArray load() {
-        FindIterable<Document> documents = collection.find();
-        JsonArray array = new JsonArray();
-        for (Document document : documents) {
-            array.add(StorageUtil.gson.toJsonTree(document));
-        }
-        return array;
+    public void load() {
+        comparator.load(storage.actions());
     }
 
     public void enableEventUpdates() {
@@ -95,6 +103,11 @@ public class MongoStorageHandler<T> extends StorageHandler<T> {
     @Override
     public boolean isAvailable() {
         return true;
+    }
+
+    @Override
+    public StorageActions<T> actions() {
+        return actions;
     }
 
     @Override

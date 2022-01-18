@@ -21,10 +21,14 @@
 package com.noahhusby.lib.data.storage.compare;
 
 import com.google.gson.JsonArray;
+import com.noahhusby.lib.data.storage.StorageActions;
+import com.noahhusby.lib.data.storage.StorageHandlers;
 import com.noahhusby.lib.data.storage.handlers.StorageHandler;
 
-public interface Comparator {
-    CompareResult save(JsonArray array, StorageHandler handler);
+import java.util.ArrayList;
 
-    CompareResult load(JsonArray array, StorageHandler handler);
+public interface Comparator<T> {
+    void save(StorageActions<T> actions);
+
+    void load(StorageActions<T> actions);
 }

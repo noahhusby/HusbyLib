@@ -22,11 +22,16 @@ package com.noahhusby.lib.data.storage.handlers;
 
 import com.google.gson.JsonArray;
 import com.noahhusby.lib.data.storage.Storage;
+import com.noahhusby.lib.data.storage.StorageActions;
+import com.noahhusby.lib.data.storage.compare.Comparator;
 import com.noahhusby.lib.data.storage.compare.CompareResult;
+import com.noahhusby.lib.data.storage.compare.ValueComparator;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Closeable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Noah Husby
@@ -34,18 +39,23 @@ import java.io.Closeable;
 public abstract class StorageHandler<T> implements Closeable {
 
     @Getter
-    private Storage storage;
+    protected Storage<T> storage;
     @Getter
     @Setter
     private int priority;
+    @Setter
+    protected Comparator<T> comparator;
 
-    public void init(Storage storage) {
+    public void init(Storage<T> storage) {
         this.storage = storage;
+        this.comparator = new ValueComparator<>(this);
     }
 
-    public abstract void save(CompareResult result);
+    public abstract void save();
 
-    public abstract JsonArray load();
+    public abstract void load();
 
     public abstract boolean isAvailable();
+
+    public abstract StorageActions<T> actions();
 }

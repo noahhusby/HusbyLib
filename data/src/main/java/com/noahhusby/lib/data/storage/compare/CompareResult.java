@@ -28,14 +28,12 @@ import java.util.Map;
 public class CompareResult {
     private final JsonArray raw;
     private final Map<JsonObject, ComparatorAction> compared;
-    private final boolean clear;
     private final String key;
 
-    public CompareResult(JsonArray raw, Map<JsonObject, ComparatorAction> compared, String key, boolean clear) {
+    public CompareResult(JsonArray raw, Map<JsonObject, ComparatorAction> compared, String key) {
         this.raw = raw;
         this.compared = compared;
         this.key = key;
-        this.clear = clear;
     }
 
     public Map<JsonObject, ComparatorAction> getComparedOutput() {
@@ -44,10 +42,6 @@ public class CompareResult {
 
     public JsonArray getRawOutput() {
         return raw;
-    }
-
-    public boolean isCleared() {
-        return clear;
     }
 
     public String getKey() {

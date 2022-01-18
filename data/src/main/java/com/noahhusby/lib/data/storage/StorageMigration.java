@@ -14,8 +14,8 @@ public class StorageMigration {
     private final Storage<?> storage;
 
     public void highest() {
-        int priority = new ArrayList<>(storage.getHandlers().keySet()).get(0).getPriority();
-        for (StorageHandler<?> handler : storage.getHandlers().keySet()) {
+        int priority = new ArrayList<>(storage.handlers().getHandlers()).get(0).getPriority();
+        for (StorageHandler<?> handler : storage.handlers().getHandlers()) {
             if (handler.getPriority() > priority) {
                 priority = handler.getPriority();
             }
@@ -24,8 +24,8 @@ public class StorageMigration {
     }
 
     public void highestAvailable() {
-        int priority = new ArrayList<>(storage.getHandlers().keySet()).get(0).getPriority();
-        for (StorageHandler<?> handler : storage.getHandlers().keySet()) {
+        int priority = new ArrayList<>(storage.handlers().getHandlers()).get(0).getPriority();
+        for (StorageHandler<?> handler : storage.handlers().getHandlers()) {
             if (handler.getPriority() > priority && handler.isAvailable()) {
                 priority = handler.getPriority();
             }
@@ -36,7 +36,7 @@ public class StorageMigration {
     public void migrate(int priority) {
         StorageHandler<?> handler = null;
         try {
-            for (StorageHandler<?> s : storage.getHandlers().keySet()) {
+            for (StorageHandler<?> s : storage.handlers().getHandlers()) {
                 if (s.getPriority() == priority) {
                     handler = s;
                 }
@@ -48,16 +48,6 @@ public class StorageMigration {
         } catch (HandlerNotAvailableExcpetion e) {
             e.printStackTrace();
             return;
-        }
-
-        JsonArray data = handler.load();
-        if (data == null) {
-            return;
-        }
-        for (StorageHandler<?> s : storage.getHandlers().keySet()) {
-            if (s != handler) {
-                s.save(storage.getHandlers().get(s).save(data, s));
-            }
         }
     }
 }

@@ -35,6 +35,7 @@ import com.noahhusby.lib.data.sql.actions.Update;
 import com.noahhusby.lib.data.sql.actions.UpdateValue;
 import com.noahhusby.lib.data.sql.structure.Structure;
 import com.noahhusby.lib.data.sql.structure.StructureElement;
+import com.noahhusby.lib.data.storage.StorageActions;
 import com.noahhusby.lib.data.storage.StorageUtil;
 import com.noahhusby.lib.data.storage.compare.ComparatorAction;
 import com.noahhusby.lib.data.storage.compare.CompareResult;
@@ -80,6 +81,7 @@ public class SQLStorageHandler<T> extends StorageHandler<T> {
         return database;
     }
 
+    /*
     @Override
     public void save(CompareResult result) {
         if (!isAvailable()) {
@@ -160,6 +162,19 @@ public class SQLStorageHandler<T> extends StorageHandler<T> {
         }
     }
 
+     */
+
+    @Override
+    public void save() {
+
+    }
+
+    @Override
+    public void load() {
+
+    }
+
+    /*
     @Override
     public JsonArray load() {
         if (!isAvailable()) {
@@ -175,9 +190,16 @@ public class SQLStorageHandler<T> extends StorageHandler<T> {
         return array;
     }
 
+     */
+
     @Override
     public boolean isAvailable() {
         return repaired;
+    }
+
+    @Override
+    public StorageActions<T> actions() {
+        return null;
     }
 
     public void setFilter(String filter) {
