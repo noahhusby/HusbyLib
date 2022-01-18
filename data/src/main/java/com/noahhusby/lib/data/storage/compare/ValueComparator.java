@@ -27,6 +27,7 @@ import com.noahhusby.lib.data.storage.StorageActions;
 import com.noahhusby.lib.data.storage.StorageUtil;
 import com.noahhusby.lib.data.storage.handlers.StorageHandler;
 
+import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -115,7 +116,9 @@ public class ValueComparator<T> implements Comparator<T> {
         Map<Object, T> temp = new HashMap<>();
         for (T obj : objects) {
             try {
-                Object key = obj.getClass().getField(handler.getStorage().getKey()).get(obj);
+                Field field =  obj.getClass().getField(handler.getStorage().getKey());
+                field.setAccessible(true);
+                Object key = field.get(obj);
                 temp.put(key, obj);
             } catch (IllegalAccessException | NoSuchFieldException e) {
                 e.printStackTrace();
