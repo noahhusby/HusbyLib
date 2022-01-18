@@ -72,21 +72,32 @@ public class StorageTreeMap<K, V> extends TreeMap<K, V> implements Storage<V> {
     private final StorageActions<V> actions = new StorageActions<V>() {
         @Override
         public void add(V o) {
-
+            try {
+                K objKey = (K) o.getClass().getField(key).get(o);
+                put(objKey, o);
+            } catch (IllegalAccessException | NoSuchFieldException e) {
+                e.printStackTrace();
+            }
         }
 
         @Override
         public void remove(V o) {
-
+            try {
+                K objKey = (K) o.getClass().getField(key).get(o);
+                StorageTreeMap.this.remove(objKey);
+            } catch (IllegalAccessException | NoSuchFieldException e) {
+                e.printStackTrace();
+            }
         }
 
         @Override
         public void update(V o) {
-
+            add(o);
         }
     };
 
     private final StorageEvents events = new StorageEvents();
+    private final StorageMigration migrate = new StorageMigration(this);
 
     @Override
     public void registerHandler(StorageHandler handler) {
@@ -141,22 +152,12 @@ public class StorageTreeMap<K, V> extends TreeMap<K, V> implements Storage<V> {
             }
 
             for (Map.Entry<JsonObject, ComparatorAction> r : result.getComparedOutput().entrySet()) {
-                if (r.getValue() == ComparatorAction.ADD) {
-                    JsonObject value = r.getKey();
-                    JsonElement keyValue = value.get(key);
-                    this.put(gson.fromJson(keyValue, (Type) K), gson.fromJson(value, (Type) V));
+                if (r.getValue() == ComparatorAction.ADD || r.getValue() == ComparatorAction.UPDATE) {
+                    actions.add(gson.fromJson(r.getKey(), (Type) V));
                 }
 
                 if (r.getValue() == ComparatorAction.REMOVE) {
-                    JsonObject value = r.getKey();
-                    K keyObject = gson.fromJson(value.get(key), (Type) K);
-                    this.remove(keyObject);
-                }
-
-                if (r.getValue() == ComparatorAction.UPDATE) {
-                    JsonObject value = r.getKey();
-                    JsonElement keyValue = value.get(key);
-                    this.put(gson.fromJson(keyValue, (Type) K), gson.fromJson(value, (Type) V));
+                    actions.remove(gson.fromJson(r.getKey(), (Type) V));
                 }
             }
         } catch (Exception e) {
@@ -207,61 +208,8 @@ public class StorageTreeMap<K, V> extends TreeMap<K, V> implements Storage<V> {
     }
 
     @Override
-    public void migrate() {
-        migrate(MigrateMode.HIGHEST_PRIORITY);
-    }
-
-    @Override
-    public void migrate(MigrateMode mode) {
-        int priority = new ArrayList<>(storageHandlers.keySet()).get(0).getPriority();
-        switch (mode) {
-            case HIGHEST_AVAILABLE_PRIORITY:
-                for (StorageHandler handler : storageHandlers.keySet()) {
-                    if (handler.getPriority() > priority && handler.isAvailable()) {
-                        priority = handler.getPriority();
-                    }
-                }
-                break;
-            case MOST_COMMON_DATA:
-                break;
-            case HIGHEST_PRIORITY:
-                for (StorageHandler handler : storageHandlers.keySet()) {
-                    if (handler.getPriority() > priority) {
-                        priority = handler.getPriority();
-                    }
-                }
-                break;
-        }
-        migrate(priority);
-    }
-
-    @Override
-    public void migrate(int priority) {
-        StorageHandler handler = null;
-        try {
-            for (StorageHandler s : storageHandlers.keySet()) {
-                if (s.getPriority() == priority) {
-                    handler = s;
-                }
-            }
-
-            if (handler == null) {
-                throw new HandlerNotAvailableExcpetion(priority);
-            }
-        } catch (HandlerNotAvailableExcpetion e) {
-            e.printStackTrace();
-            return;
-        }
-
-        JsonArray data = handler.load();
-        if (data == null) {
-            return;
-        }
-        for (StorageHandler s : storageHandlers.keySet()) {
-            if (s != handler) {
-                s.save(storageHandlers.get(s).save(data, s));
-            }
-        }
+    public StorageMigration migrate() {
+        return migrate;
     }
 
     @Override

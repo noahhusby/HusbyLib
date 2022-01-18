@@ -50,11 +50,7 @@ public interface Storage<T> extends Closeable {
 
     void setAutoSave(long period, TimeUnit unit);
 
-    void migrate();
-
-    void migrate(MigrateMode mode);
-
-    void migrate(int priority);
+    StorageMigration migrate();
 
     StorageEvents events();
 
