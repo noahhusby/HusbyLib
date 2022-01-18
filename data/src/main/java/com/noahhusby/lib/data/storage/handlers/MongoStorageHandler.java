@@ -39,6 +39,8 @@ public class MongoStorageHandler<T> extends StorageHandler<T> {
     @Getter
     private final MongoCollection<Document> collection;
 
+    private Thread eventThread = null;
+
     private final StorageActions<T> actions = new StorageActions<T>() {
         @Override
         public void add(T o) {
@@ -82,15 +84,24 @@ public class MongoStorageHandler<T> extends StorageHandler<T> {
     }
 
     public void enableEventUpdates() {
-        collection.watch().forEach((Consumer<? super ChangeStreamDocument<Document>>) x -> {
-            if (x.getOperationType() == OperationType.INSERT) {
-                storage.actions().add(StorageUtil.gson.fromJson(StorageUtil.gson.toJsonTree(x.getFullDocument()), storage.getClassType()));
-            } else if (x.getOperationType() == OperationType.REPLACE) {
-                storage.actions().update(StorageUtil.gson.fromJson(StorageUtil.gson.toJsonTree(x.getFullDocument()), storage.getClassType()));
-            } else if (x.getOperationType() == OperationType.DELETE) {
-                storage.actions().remove(StorageUtil.gson.fromJson(StorageUtil.gson.toJsonTree(x.getFullDocument()), storage.getClassType()));
+        eventThread = new Thread(() -> {
+            try {
+                collection.watch().forEach((Consumer<? super ChangeStreamDocument<Document>>) x -> {
+                    if (x.getOperationType() == OperationType.INSERT) {
+                        storage.actions().add(StorageUtil.gson.fromJson(StorageUtil.gson.toJsonTree(x.getFullDocument()), storage.getClassType()));
+                    } else if (x.getOperationType() == OperationType.UPDATE) {
+                        Document doc = collection.find(x.getDocumentKey()).first();
+                        storage.actions().update(StorageUtil.gson.fromJson(doc.toJson(), storage.getClassType()));
+                    } else if (x.getOperationType() == OperationType.DELETE) {
+                        String key = x.getDocumentKey().get("_id").asString().getValue();
+                        Document model = new Document(storage.getKey(), key);
+                        storage.actions().remove(StorageUtil.gson.fromJson(StorageUtil.gson.toJsonTree(model), storage.getClassType()));
+                    }
+                });
+            } catch (Exception ignored) {
             }
         });
+        eventThread.start();
     }
 
     @Override
@@ -105,5 +116,9 @@ public class MongoStorageHandler<T> extends StorageHandler<T> {
 
     @Override
     public void close() {
+        if (eventThread != null) {
+            eventThread.interrupt();
+            eventThread = null;
+        }
     }
 }
