@@ -116,7 +116,7 @@ public class ValueComparator<T> implements Comparator<T> {
         Map<Object, T> temp = new HashMap<>();
         for (T obj : objects) {
             try {
-                Field field =  obj.getClass().getField(handler.getStorage().getKey());
+                Field field =  obj.getClass().getDeclaredField(handler.getStorage().getKey());
                 field.setAccessible(true);
                 Object key = field.get(obj);
                 temp.put(key, obj);
