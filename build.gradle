@@ -27,7 +27,7 @@ allprojects {
         gsonVersion = "2.8.0"
         snakeVersion = "1.30"
         guavaVersion = "31.0.1-jre"
-        configVersion = "1.4.1"
+        configVersion = "1.4.2"
         mysqlVersion = "8.0.28"
         hikariVersion = "4.0.3"
         lombokVersion = "1.18.22"
