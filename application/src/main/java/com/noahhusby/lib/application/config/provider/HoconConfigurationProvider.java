@@ -41,6 +41,8 @@ import java.io.Reader;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.Map;
 
 /**
@@ -66,8 +68,8 @@ public class HoconConfigurationProvider extends ConfigurationProvider {
     @SneakyThrows
     public void update(Map<String, Property> properties) {
         load();
-        Map<String, Property> output = new HashMap<>(properties);
-        for (String key : new ArrayList<>(properties.keySet())) {
+        Map<String, Property> output = new LinkedHashMap<>(properties);
+        for (String key : new LinkedList<>(properties.keySet())) {
             if (entries.containsKey(key)) {
                 Property old = properties.get(key);
                 Object newValue = HusbyUtil.GSON.fromJson(HusbyUtil.GSON.toJson(entries.get(key)), old.getField().getType());

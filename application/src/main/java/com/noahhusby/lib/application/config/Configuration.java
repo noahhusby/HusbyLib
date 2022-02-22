@@ -35,6 +35,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -251,7 +252,7 @@ public class Configuration {
     }
 
     public static Map<String, Property> getProperties(Object obj, Field[] fields) throws IllegalAccessException {
-        Map<String, Property> properties = new HashMap<>();
+        Map<String, Property> properties = new LinkedHashMap<>();
         for (Field field : fields) {
             if (field.isAnnotationPresent(Config.Ignore.class)) {
                 continue;
