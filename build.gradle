@@ -30,7 +30,7 @@ allprojects {
         configVersion = "1.4.2"
         mysqlVersion = "8.0.28"
         hikariVersion = "4.0.3"
-        lombokVersion = "1.18.22"
+        lombokVersion = "1.18.24"
         mongoVersion = "3.12.11"
     }
 
