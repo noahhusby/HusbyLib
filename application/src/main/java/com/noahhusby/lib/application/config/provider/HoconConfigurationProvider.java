@@ -39,8 +39,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.Reader;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -73,7 +71,7 @@ public class HoconConfigurationProvider extends ConfigurationProvider {
             if (entries.containsKey(key)) {
                 Property old = properties.get(key);
                 Object newValue = HusbyUtil.GSON.fromJson(HusbyUtil.GSON.toJson(entries.get(key)), old.getField().getType());
-                output.put(key, new Property(old.getName(), old.getComment(), newValue, old.getField()));
+                output.put(key, new Property(old.getName(), old.getComment(), newValue, old.getField(), old.getEnvironmentVariable()));
             }
         }
         BufferedWriter writer = new BufferedWriter(new FileWriter(getSource().getFile()));

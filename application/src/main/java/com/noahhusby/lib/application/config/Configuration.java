@@ -47,6 +47,83 @@ public class Configuration {
     private final ConfigurationProvider provider;
 
     /**
+     * Create a configuration instance from a class with the {@link Config} annotation.
+     *
+     * @param clazz Class with a {@link Config} annotation.
+     * @return {@link Configuration}.
+     * @throws ClassNotConfigException if the class does not have the {@link Config} annotation.
+     */
+    public static Configuration of(@NonNull Class<?> clazz) throws ClassNotConfigException {
+        return of(clazz, new File(System.getProperty("user.dir")));
+    }
+
+    /**
+     * Create a configuration instance from a class with the {@link Config} annotation.
+     *
+     * @param clazz     Class with a {@link Config} annotation.
+     * @param directory A custom directory for the file.
+     * @return {@link Configuration} instance.
+     * @throws ClassNotConfigException if the class does not have the {@link Config} annotation.
+     */
+    public static Configuration of(@NonNull Class<?> clazz, @NonNull File directory) throws ClassNotConfigException {
+        if (!clazz.isAnnotationPresent(Config.class)) {
+            throw new ClassNotConfigException();
+        }
+
+        Config config = clazz.getAnnotation(Config.class);
+        String fileName = config.name().contains(".") ? config.name() : config.name() + config.type().getExtension();
+        FileConfigurationSource fileSource = new FileConfigurationSource(new File(directory, fileName));
+        Class<? extends ConfigurationProvider> configurationProviderClass = config.type().getProvider();
+        try {
+            ConfigurationProvider provider = (ConfigurationProvider) configurationProviderClass.getConstructors()[0].newInstance(fileSource);
+            return new Configuration(provider);
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    /**
+     * Get a map of properties from a config class.
+     *
+     * @param clazz Class with a {@link Config} annotation.
+     * @return A map of properties
+     * @throws IllegalAccessException if a given property cannot be accessed
+     */
+    public static Map<String, Property> getProperties(Class<?> clazz) throws IllegalAccessException {
+        return getProperties(clazz, clazz.getDeclaredFields());
+    }
+
+    /**
+     * Get a map of properties from a config class.
+     *
+     * @param obj Object
+     * @return A map of properties
+     * @throws IllegalAccessException if a given property cannot be accessed
+     */
+    public static Map<String, Property> getProperties(Object obj) throws IllegalAccessException {
+        return getProperties(obj, obj.getClass().getDeclaredFields());
+    }
+
+    public static Map<String, Property> getProperties(Object obj, Field[] fields) throws IllegalAccessException {
+        Map<String, Property> properties = new LinkedHashMap<>();
+        for (Field field : fields) {
+            if (field.isAnnotationPresent(Config.Ignore.class)) {
+                continue;
+            }
+            Config.Name nameAnnotation = field.getAnnotation(Config.Name.class);
+            Config.Comment commentAnnotation = field.getAnnotation(Config.Comment.class);
+            String environmentVariable = field.isAnnotationPresent(EnvironmentVariable.class) ? field.getAnnotation(EnvironmentVariable.class).value() : null;
+            String name = nameAnnotation == null ? field.getName() : nameAnnotation.value();
+            String[] comment = commentAnnotation == null ? null : commentAnnotation.value();
+            field.setAccessible(true);
+            properties.put(name, new Property(name, comment, field.get(obj), field, environmentVariable));
+        }
+        return properties;
+    }
+
+    /**
      * Loads the config file data
      */
     public void load() {
@@ -103,7 +180,12 @@ public class Configuration {
         for (Property property : properties.values()) {
             Field field = property.getField();
             Type type = field.getType();
-            Object object = HusbyUtil.GSON.fromJson(HusbyUtil.GSON.toJson(provider.getEntries().get(property.getName())), type);
+            Object object;
+            if (property.getEnvironmentVariable() != null && System.getenv().containsKey(property.getEnvironmentVariable())) {
+                object = System.getenv(property.getEnvironmentVariable());
+            } else {
+                object = HusbyUtil.GSON.fromJson(HusbyUtil.GSON.toJson(provider.getEntries().get(property.getName())), type);
+            }
             field.setAccessible(true);
             field.set(clazz.newInstance(), object);
         }
@@ -189,82 +271,6 @@ public class Configuration {
      */
     public long getAsLong(String key) {
         return (long) get(key);
-    }
-
-    /**
-     * Create a configuration instance from a class with the {@link Config} annotation.
-     *
-     * @param clazz Class with a {@link Config} annotation.
-     * @return {@link Configuration}.
-     * @throws ClassNotConfigException if the class does not have the {@link Config} annotation.
-     */
-    public static Configuration of(@NonNull Class<?> clazz) throws ClassNotConfigException {
-        return of(clazz, new File(System.getProperty("user.dir")));
-    }
-
-    /**
-     * Create a configuration instance from a class with the {@link Config} annotation.
-     *
-     * @param clazz     Class with a {@link Config} annotation.
-     * @param directory A custom directory for the file.
-     * @return {@link Configuration} instance.
-     * @throws ClassNotConfigException if the class does not have the {@link Config} annotation.
-     */
-    public static Configuration of(@NonNull Class<?> clazz, @NonNull File directory) throws ClassNotConfigException {
-        if (!clazz.isAnnotationPresent(Config.class)) {
-            throw new ClassNotConfigException();
-        }
-
-        Config config = clazz.getAnnotation(Config.class);
-        String fileName = config.name().contains(".") ? config.name() : config.name() + config.type().getExtension();
-        FileConfigurationSource fileSource = new FileConfigurationSource(new File(directory, fileName));
-        Class<? extends ConfigurationProvider> configurationProviderClass = config.type().getProvider();
-        try {
-            ConfigurationProvider provider = (ConfigurationProvider) configurationProviderClass.getConstructors()[0].newInstance(fileSource);
-            return new Configuration(provider);
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            e.printStackTrace();
-        }
-
-        return null;
-    }
-
-    /**
-     * Get a map of properties from a config class.
-     *
-     * @param clazz Class with a {@link Config} annotation.
-     * @return A map of properties
-     * @throws IllegalAccessException if a given property cannot be accessed
-     */
-    public static Map<String, Property> getProperties(Class<?> clazz) throws IllegalAccessException {
-        return getProperties(clazz, clazz.getDeclaredFields());
-    }
-
-    /**
-     * Get a map of properties from a config class.
-     *
-     * @param obj Object
-     * @return A map of properties
-     * @throws IllegalAccessException if a given property cannot be accessed
-     */
-    public static Map<String, Property> getProperties(Object obj) throws IllegalAccessException {
-        return getProperties(obj, obj.getClass().getDeclaredFields());
-    }
-
-    public static Map<String, Property> getProperties(Object obj, Field[] fields) throws IllegalAccessException {
-        Map<String, Property> properties = new LinkedHashMap<>();
-        for (Field field : fields) {
-            if (field.isAnnotationPresent(Config.Ignore.class)) {
-                continue;
-            }
-            Config.Name nameAnnotation = field.getAnnotation(Config.Name.class);
-            Config.Comment commentAnnotation = field.getAnnotation(Config.Comment.class);
-            String name = nameAnnotation == null ? field.getName() : nameAnnotation.value();
-            String[] comment = commentAnnotation == null ? null : commentAnnotation.value();
-            field.setAccessible(true);
-            properties.put(name, new Property(name, comment, field.get(obj), field));
-        }
-        return properties;
     }
 
 }

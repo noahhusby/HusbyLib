@@ -20,39 +20,16 @@
 
 package com.noahhusby.lib.application.config;
 
-import lombok.Value;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import java.lang.reflect.Field;
-
-/**
- * A class representing a specific property in a config file
- *
- * @author Noah Husby
- */
-@Value
-public class Property {
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.FIELD)
+public @interface EnvironmentVariable {
     /**
-     * Name of field, or other name if specified
+     * Name of the environment variable.
      */
-    String name;
-
-    /**
-     * Comment of property
-     */
-    String[] comment;
-
-    /**
-     * Default value specified by config file
-     */
-    Object value;
-
-    /**
-     * Field of property
-     */
-    Field field;
-
-    /**
-     * An overriding environment variable. Null if unset.
-     */
-    String environmentVariable;
+    String value();
 }
