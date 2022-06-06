@@ -20,7 +20,6 @@
 
 package com.noahhusby.lib.application.config;
 
-import com.google.gson.JsonElement;
 import com.noahhusby.lib.application.config.exception.ClassNotConfigException;
 import com.noahhusby.lib.application.config.provider.ConfigurationProvider;
 import com.noahhusby.lib.application.config.source.FileConfigurationSource;
@@ -34,7 +33,6 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -123,44 +121,6 @@ public class Configuration {
      */
     public void load() {
         provider.load();
-    }
-
-    /**
-     * Gets a config class object from the config file.
-     *
-     * @param clazz Config class.
-     * @param <T>   Config class type.
-     * @return T class
-     * @deprecated As of 0.1.60, replaced by  {@link #sync(Class)}
-     */
-    @SneakyThrows
-    public <T> T bind(Class<T> clazz) {
-        provider.load();
-        Map<String, Object> members = new HashMap<>();
-        for (Map.Entry<?, ?> entry : getProvider().getEntries().entrySet()) {
-            members.put((String) entry.getKey(), entry.getValue());
-        }
-
-        Map<String, Field> fields = new HashMap<>();
-        for (Field field : clazz.getDeclaredFields()) {
-            if (field.isAnnotationPresent(Config.Ignore.class)) {
-                continue;
-            }
-            Config.Name nameAnnotation = field.getAnnotation(Config.Name.class);
-            String name = nameAnnotation == null ? field.getName() : nameAnnotation.value();
-            field.setAccessible(true);
-            fields.put(name, field);
-        }
-
-        T instance = clazz.newInstance();
-        for (Map.Entry<String, Field> entry : fields.entrySet()) {
-            Field field = entry.getValue();
-            JsonElement jsonElement = HusbyUtil.GSON.toJsonTree(members.get(entry.getKey()));
-            Object value = HusbyUtil.GSON.fromJson(jsonElement, field.getType());
-            field.setAccessible(true);
-            field.set(instance, value);
-        }
-        return instance;
     }
 
     /**
