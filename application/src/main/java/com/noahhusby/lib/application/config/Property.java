@@ -55,4 +55,22 @@ public class Property {
      * An overriding environment variable. Null if unset.
      */
     String environmentVariable;
+
+    /**
+     * Creates a configuration property from a field.
+     *
+     * @param clazz The class where the field is located.
+     * @param field {@link Field} of a configuration class.
+     * @return A {@link Property} representation of a field.
+     * @throws IllegalAccessException if the field cannot be access in the given class.
+     */
+    static Property of(Object clazz, Field field) throws IllegalAccessException {
+        Config.Name nameAnnotation = field.getAnnotation(Config.Name.class);
+        Config.Comment commentAnnotation = field.getAnnotation(Config.Comment.class);
+        String environmentVariable = field.isAnnotationPresent(EnvironmentVariable.class) ? field.getAnnotation(EnvironmentVariable.class).value() : null;
+        String name = nameAnnotation == null ? field.getName() : nameAnnotation.value();
+        String[] comment = commentAnnotation == null ? null : commentAnnotation.value();
+        field.setAccessible(true);
+        return new Property(name, comment, field.get(clazz), field, environmentVariable);
+    }
 }

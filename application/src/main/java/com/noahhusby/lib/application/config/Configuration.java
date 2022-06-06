@@ -112,13 +112,8 @@ public class Configuration {
             if (field.isAnnotationPresent(Config.Ignore.class)) {
                 continue;
             }
-            Config.Name nameAnnotation = field.getAnnotation(Config.Name.class);
-            Config.Comment commentAnnotation = field.getAnnotation(Config.Comment.class);
-            String environmentVariable = field.isAnnotationPresent(EnvironmentVariable.class) ? field.getAnnotation(EnvironmentVariable.class).value() : null;
-            String name = nameAnnotation == null ? field.getName() : nameAnnotation.value();
-            String[] comment = commentAnnotation == null ? null : commentAnnotation.value();
-            field.setAccessible(true);
-            properties.put(name, new Property(name, comment, field.get(obj), field, environmentVariable));
+            Property property = Property.of(obj, field);
+            properties.put(property.getName(), property);
         }
         return properties;
     }
