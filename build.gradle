@@ -28,7 +28,7 @@ allprojects {
 
     ext {
         husbylibVersion = "0.1." + ('git rev-list --count HEAD'.execute().text.trim())
-        gsonVersion = "2.8.0"
+        gsonVersion = "2.9.1"
         snakeVersion = "1.31"
         guavaVersion = "31.1-jre"
         configVersion = "1.4.2"
